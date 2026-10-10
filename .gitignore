@@ -1,0 +1,7 @@
+cloudflared.exe
+__pycache__/
+*.pyc
+.venv/
+venv/
+backups/*.xlsx
+!backups/.gitkeep

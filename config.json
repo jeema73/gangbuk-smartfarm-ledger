@@ -1,0 +1,59 @@
+{
+  "supplier": {
+    "name": "강북구청",
+    "department": "지역경제과",
+    "biz_no": "210-83-02118",
+    "address": "서울 강북구 덕릉로 138 (번동) 강북구청",
+    "manager": "권준형 주무관",
+    "tel": "02-901-7256"
+  },
+  "google_sheet": {
+    "sheet_url": "https://docs.google.com/spreadsheets/d/1sqeqGdTVnGn0Rx5p2kjRmTX843dVTxIrJjdKvyflyBw/edit?gid=0#gid=0",
+    "sheet_id": "1sqeqGdTVnGn0Rx5p2kjRmTX843dVTxIrJjdKvyflyBw",
+    "webhook_url": "https://script.google.com/macros/s/AKfycbwilcWgjPmpNCRqfHabAdXrRQwhOWlf1cGgqeHsDF2fyb2y6Fn0qBxQ9y24jWnBWWc/exec"
+  },
+  "crops": [
+    {
+      "name": "루꼴라",
+      "unit_price": 17.7,
+      "category": "허브류",
+      "unit": "g",
+      "remarks": "생잎/피자용"
+    },
+    {
+      "name": "엽채류",
+      "unit_price": 11.5,
+      "category": "쌈채소",
+      "unit": "g",
+      "remarks": "샐러드용"
+    },
+    {
+      "name": "애플민트",
+      "unit_price": 56.6,
+      "category": "허브류",
+      "unit": "g",
+      "remarks": "음료/모히또"
+    },
+    {
+      "name": "바질",
+      "unit_price": 30.0,
+      "category": "허브류",
+      "unit": "g",
+      "remarks": "패스토"
+    },
+    {
+      "name": "딸기(설향)",
+      "unit_price": 10.0,
+      "category": "과채류",
+      "unit": "g",
+      "remarks": "생과"
+    },
+    {
+      "name": "애플수박",
+      "unit_price": 8.0,
+      "category": "과채류",
+      "unit": "g",
+      "remarks": "생과"
+    }
+  ]
+}

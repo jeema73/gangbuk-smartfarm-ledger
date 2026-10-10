@@ -1,0 +1,2655 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>강북구청 스마트팜 납품관리 & 확인서 발행 시스템</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- 지브리 감성 폰트: 고운돋움(Gowun Dodum) & 개구(Gaegu) & 프리텐다드 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&family=Noto+Serif+KR:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ghibli: {
+              forest: '#2d5a43',
+              forestDark: '#1e3f2e',
+              forestLight: '#3d7a5a',
+              leaf: '#4a8a65',
+              matcha: '#eaf3ec',
+              matchaBorder: '#cce2d3',
+              cream: '#fcf8f0',
+              paper: '#faf4e6',
+              warmBorder: '#e7ded0',
+              sunlight: '#d97736',
+              sunlightHover: '#c26527',
+              amberBg: '#fef7ec',
+              earth: '#2d2720',
+              subText: '#695f51',
+            }
+          },
+          fontFamily: {
+            ghibli: ['"Gowun Dodum"', 'Pretendard', 'sans-serif'],
+            hand: ['"Gaegu"', 'cursive', 'sans-serif'],
+            serif: ['"Noto Serif KR"', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root {
+      --ghibli-forest: #2d5a43;
+      --ghibli-leaf: #3d7a5a;
+      --ghibli-cream: #fbf7ee;
+      --ghibli-paper: #faf4e6;
+      --ghibli-border: #e6dfd1;
+      --ghibli-earth: #2c2822;
+      --ghibli-sun: #d97736;
+    }
+
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+      background: radial-gradient(circle at 10% 10%, #fffdf8 0%, #faf5ea 50%, #f4ece0 100%);
+      color: #2c2822;
+      min-height: 100vh;
+    }
+
+    h1, h2, h3, .font-ghibli {
+      font-family: 'Gowun Dodum', 'Pretendard', sans-serif;
+    }
+
+    /* 포근한 지브리 필 탭 스타일 */
+    .tab-btn {
+      font-family: 'Gowun Dodum', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #635848;
+      padding: 0.5rem 0.875rem;
+      border-radius: 9999px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      white-space: nowrap;
+      border: 1px solid transparent;
+    }
+    .tab-btn:hover {
+      background-color: #f1ebd8;
+      color: #2d5a43;
+      border-color: #e5dbc7;
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, #2d5a43 0%, #3a7556 100%) !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(45, 90, 67, 0.25);
+      border-color: transparent !important;
+    }
+
+    /* 지브리 카드 & 인풋 */
+    .ghibli-card {
+      background: rgba(255, 255, 255, 0.95);
+      border: 1px solid #e7ded0;
+      border-radius: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(60, 48, 30, 0.04), 0 4px 10px -2px rgba(60, 48, 30, 0.02);
+      backdrop-filter: blur(8px);
+    }
+
+    .ghibli-input {
+      background-color: #faf7f0;
+      border: 1.5px solid #ded5c4;
+      border-radius: 0.875rem;
+      color: #2c2822;
+      transition: all 0.2s ease;
+    }
+    .ghibli-input:focus {
+      background-color: #ffffff;
+      border-color: #3d7a5a;
+      box-shadow: 0 0 0 3px rgba(61, 122, 90, 0.15);
+      outline: none;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    
+    /* 인쇄 전용 스타일 (공식 관공서 문서 규격 유지) */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #print-area, #print-area * {
+        visibility: visible;
+      }
+      #print-area {
+        display: block !important;
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      @page {
+        size: A4 portrait;
+        margin: 8mm 10mm 8mm 10mm;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .stamp-box {
+        position: relative;
+      }
+      .stamp-circle {
+        border: 2px solid #dc2626 !important;
+        color: #dc2626 !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen">
+
+  <!-- 네비게이션 헤더 -->
+  <header class="bg-white/90 backdrop-blur-md border-b border-[#e6dfd1] sticky top-0 z-30 shadow-xs no-print">
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 flex items-center justify-between h-14 sm:h-16">
+      <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+        <div class="relative p-1 bg-[#fbf7ed] rounded-xl border border-[#e4d9c4] shadow-xs shrink-0">
+          <img src="/static/gangbuk_logo.png" onerror="this.src='https://www.gangbuk.go.kr/static/images/portal/ns_logo1.png'" alt="강북구청 CI" class="h-7 sm:h-8 w-auto object-contain">
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-bold text-base sm:text-lg text-[#26211a] font-['Gowun_Dodum',sans-serif] leading-tight whitespace-nowrap">강북구 협력매장 납품관리</h1>
+          <p class="text-[10px] text-[#786b59] font-medium hidden sm:block whitespace-nowrap">강북구 스마트팜 · 4.19로 로컬푸드</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+        <button onclick="openMobileQrModal()" id="btn-mobile-qr" class="text-xs bg-gradient-to-r from-[#d97736] to-[#e68a35] hover:from-[#c26527] hover:to-[#cf7625] text-white px-2.5 sm:px-3 py-1.5 rounded-full font-bold flex items-center gap-1 shadow-xs transition active:scale-95 whitespace-nowrap">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <span>스마트폰</span>
+        </button>
+        <span class="text-xs bg-[#eef7f0] text-[#1e613b] px-2 sm:px-2.5 py-1 rounded-full font-bold border border-[#cbe5d2] flex items-center gap-1.5 shadow-xs whitespace-nowrap">
+          <span class="w-2 h-2 rounded-full bg-[#16a34a] animate-pulse inline-block"></span>
+          <span>LIVE</span>
+        </span>
+      </div>
+    </div>
+    
+    <!-- 지브리 필 탭 메뉴 (모바일 가로 스크롤 대응) -->
+    <div class="max-w-6xl mx-auto px-2 sm:px-4 py-1.5 flex space-x-1 sm:space-x-2 border-t border-[#f0e8d9] overflow-x-auto no-scrollbar">
+      <button onclick="switchTab('register')" id="tab-register" class="tab-btn active">
+        <i class="fa-solid fa-seedling text-emerald-300"></i>
+        <span>신규 납품 <span class="hidden sm:inline">&amp; 즉시 인쇄</span></span>
+      </button>
+      <button onclick="switchTab('history')" id="tab-history" class="tab-btn">
+        <i class="fa-solid fa-clock-rotate-left"></i>
+        <span>최근 내역 <span class="hidden sm:inline">/ 재발행</span></span>
+      </button>
+      <button onclick="switchTab('stores')" id="tab-stores" class="tab-btn">
+        <i class="fa-solid fa-store"></i>
+        <span>협력업체 관리</span>
+      </button>
+      <button onclick="switchTab('crops')" id="tab-crops" class="tab-btn">
+        <i class="fa-solid fa-seedling"></i>
+        <span>작물/단가 관리</span>
+      </button>
+      <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn">
+        <i class="fa-solid fa-receipt"></i>
+        <span>업체별 결재내역 <span class="hidden sm:inline">(인쇄)</span></span>
+      </button>
+      <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>월별 총괄 정산 <span class="hidden sm:inline">(인쇄)</span></span>
+      </button>
+      <button onclick="switchTab('supplier')" id="tab-supplier" class="tab-btn">
+        <i class="fa-solid fa-sliders"></i>
+        <span>설정/엑셀업로드</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 메인 컨테이너 -->
+  <main class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-5 no-print">
+
+    <!-- 슬림형 지브리 센터 & 온실 배너 (컴팩트 상하 최소화) -->
+    <div class="relative overflow-hidden rounded-2xl border border-[#e5dccb] bg-[#fbf7ee] shadow-xs mb-4 no-print h-14 sm:h-18 md:h-20">
+      <img src="/static/smartfarm_center_banner.jpg" alt="Gangbukgu SmartFarm Center" class="w-full h-full object-cover object-[center_55%]">
+      <div class="absolute inset-0 bg-gradient-to-r from-black/65 via-black/35 to-transparent flex items-center px-4 sm:px-6">
+        <div class="text-white drop-shadow-md">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-xs sm:text-sm md:text-base font-bold tracking-wider font-['Gowun_Dodum',sans-serif] uppercase">Gangbuk-gu SmartFarm Center</span>
+          </div>
+          <span class="text-[10px] text-emerald-100 font-medium tracking-widest hidden sm:inline-block">4.19-ro Local Food · Smart Greenhouse System</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 1. 신규 납품 등록 탭 -->
+    <section id="view-register" class="space-y-6">
+      <div class="ghibli-card p-4 sm:p-6 md:p-8">
+        <div class="flex items-center justify-between pb-4 border-b border-[#eee5d6] mb-5">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <span class="bg-[#e4efe8] text-[#2d5a43] border border-[#c2ded0] px-2.5 py-0.5 rounded-xl text-xs font-bold">Step 1</span>
+              <span>납품 기본 정보</span>
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">상부에서 요청받은 납품일자와 대상 매장을 지정해주세요.</p>
+          </div>
+          <button onclick="resetOrderForm()" class="text-xs text-[#716553] hover:text-[#2d5a43] transition flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-[#faf5eb] hover:bg-[#ede3d1] border border-[#dfd3be] font-medium">
+            <i class="fa-solid fa-arrow-rotate-right"></i> 초기화
+          </button>
+        </div>
+
+        <!-- 기본 정보 입력 폼 -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 mb-6 sm:mb-8">
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1.5">납품(주문) 일자 *</label>
+            <input type="date" id="order-date" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1.5">납품처 (매장명) *</label>
+            <div class="flex gap-2">
+              <select id="store-select" onchange="onStoreSelectChange()" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
+                <option value="">-- 매장 선택 --</option>
+              </select>
+            </div>
+            <input type="text" id="store-custom" placeholder="신규 매장명 직접 입력시 사용" class="mt-2 w-full px-3 py-2 text-xs bg-white border border-[#ded5c4] rounded-xl focus:ring-1 focus:ring-[#3d7a5a] focus:outline-none hidden">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1.5">배송 예정일</label>
+            <input type="date" id="delivery-date" class="w-full px-3.5 py-2.5 ghibli-input text-sm">
+          </div>
+        </div>
+
+        <!-- 품목 리스트 입력 -->
+        <div class="flex items-center justify-between pb-3 border-b border-[#eee5d6] mb-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <span class="bg-[#e4efe8] text-[#2d5a43] border border-[#c2ded0] px-2.5 py-0.5 rounded-xl text-xs font-bold">Step 2</span>
+              <span>품목 및 수량 입력</span>
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">품목을 추가하면 확인서 한 장에 묶여 출력됩니다.</p>
+          </div>
+          <button type="button" onclick="addItemRow()" class="px-3.5 py-2 bg-[#e6f3eb] text-[#245f3c] hover:bg-[#d5ebd9] border border-[#bfded0] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95">
+            <i class="fa-solid fa-plus text-[#2d5a43]"></i> + 품목 추가
+          </button>
+        </div>
+
+        <!-- 모바일 가로 스크롤 안내 -->
+        <div class="md:hidden flex items-center gap-1.5 bg-[#fbf6ec] text-[#78644e] text-[11px] px-3 py-1.5 rounded-xl border border-[#e8ddcb] mb-2">
+          <i class="fa-solid fa-arrows-left-right text-[#d97736] shrink-0"></i>
+          <span>모바일 화면에서는 표를 좌우로 밀어서 전체 항목을 확인하세요.</span>
+        </div>
+
+        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+          <table class="w-full text-left border-collapse min-w-[780px]" id="items-table">
+            <thead>
+              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                <th class="py-3 px-3 w-12 text-center whitespace-nowrap">No</th>
+                <th class="py-3 px-4 w-60 min-w-[220px] whitespace-nowrap">작물명 *</th>
+                <th class="py-3 px-4 w-36 min-w-[130px] whitespace-nowrap">수량(g) *</th>
+                <th class="py-3 px-4 w-32 min-w-[110px] whitespace-nowrap">단가 (원/g)</th>
+                <th class="py-3 px-4 w-36 min-w-[120px] text-right whitespace-nowrap">공급가액(원)</th>
+                <th class="py-3 px-4 min-w-[220px] whitespace-nowrap">비고</th>
+                <th class="py-3 px-3 w-12 text-center whitespace-nowrap">삭제</th>
+              </tr>
+            </thead>
+            <tbody id="items-body" class="divide-y divide-[#eee5d5] text-sm">
+              <!-- JS 로 동적 행 생성 -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 금액 요약 및 액션 바 (지브리 감성 카드) -->
+        <div class="mt-6 bg-[#fbf6ec] rounded-2xl p-4 sm:p-5 border border-[#e5dccb] flex flex-col md:flex-row items-center justify-between gap-4">
+          <div class="grid grid-cols-3 gap-2.5 w-full md:w-auto text-center md:text-left">
+            <div class="bg-white/95 p-3 rounded-2xl border border-[#e6dfcf] shadow-xs">
+              <span class="text-[11px] text-[#7a6f5d] block font-medium">총 품목수</span>
+              <span id="summary-count" class="font-bold text-[#2b2721] text-sm sm:text-base font-['Gowun_Dodum',sans-serif]">0개</span>
+            </div>
+            <div class="bg-white/95 p-3 rounded-2xl border border-[#e6dfcf] shadow-xs">
+              <span class="text-[11px] text-[#7a6f5d] block font-medium">총 중량</span>
+              <span id="summary-qty" class="font-bold text-[#2b2721] text-sm sm:text-base font-['Gowun_Dodum',sans-serif]">0 g</span>
+            </div>
+            <div class="bg-white/95 p-3 rounded-2xl border border-[#e6dfcf] shadow-xs">
+              <span class="text-[11px] text-[#7a6f5d] block font-medium">총 공급금액</span>
+              <span id="summary-amount" class="font-black text-[#2d5a43] text-sm sm:text-xl font-['Gowun_Dodum',sans-serif]">0 원</span>
+            </div>
+          </div>
+
+          <div class="flex flex-col sm:flex-row items-center gap-2.5 w-full md:w-auto">
+            <button type="button" onclick="submitOrder(false)" class="w-full sm:w-auto px-5 py-3 bg-[#f5efe3] hover:bg-[#eae1d0] text-[#4d4235] font-bold rounded-2xl text-sm border border-[#dad0be] transition shadow-xs text-center active:scale-95">
+              <i class="fa-regular fa-floppy-disk mr-1 text-[#7a6d5a]"></i> 대장에 저장만 하기
+            </button>
+            <button type="button" onclick="submitOrder(true)" class="w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white font-bold rounded-2xl text-sm transition shadow-md hover:shadow-lg flex items-center justify-center gap-2 text-center active:scale-95">
+              <i class="fa-solid fa-print"></i> 💾 저장 &amp; 확인서 즉시 인쇄
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 2. 최근 납품 내역 탭 -->
+    <section id="view-history" class="hidden space-y-6">
+      <div class="ghibli-card p-4 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-3">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-[#3d7a5a]"></i> 최근 납품 및 확인서 재발행
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">과거에 납품한 건도 언제든지 한 장의 납품확인서로 즉시 재출력하고 수정/삭제할 수 있습니다.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- 월별 선택 -->
+            <select id="filter-month" onchange="onFilterChange()" class="px-3 py-2 text-xs ghibli-input font-medium">
+              <option value="">전체 기간</option>
+              <option value="2026-10" selected>2026년 10월</option>
+              <option value="2026-09">2026년 09월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 09월</option>
+              <option value="2025-08">2025년 08월</option>
+            </select>
+            <!-- 특정 날짜 -->
+            <input type="date" id="filter-date" onchange="onFilterChange()" class="px-3 py-2 text-xs ghibli-input" title="특정 일자 선택">
+            <!-- 매장 검색 -->
+            <input type="text" id="filter-store" oninput="onFilterChange()" placeholder="매장명 검색..." class="w-32 sm:w-36 px-3 py-2 text-xs ghibli-input">
+            <!-- 구글 시트 전체 동기화 버튼 -->
+            <button onclick="syncGoogleSheetNow()" class="px-3 py-2 bg-[#eef7f0] hover:bg-[#dcefe2] border border-[#cbe5d2] text-[#1e613b] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95 whitespace-nowrap" title="엑셀 전체 내역을 구글 스프레드시트에 100% 동기화">
+              <i class="fa-solid fa-arrows-rotate text-emerald-600"></i> 구글 시트 전체 동기화
+            </button>
+          </div>
+        </div>
+
+        <!-- 필터 요약 카드 바 -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-3 text-center text-xs">
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">조회 기간</span>
+            <span id="hist-summary-period" class="font-bold text-[#2d5a43] text-sm">2026년 10월</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">주문 건수</span>
+            <span id="hist-summary-count" class="font-bold text-[#26211a] text-sm">0건</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">총 공급 중량</span>
+            <span id="hist-summary-qty" class="font-bold text-[#26211a] text-sm">0g</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">총 공급 금액</span>
+            <span id="hist-summary-amount" class="font-black text-[#2d5a43] text-sm">0원</span>
+          </div>
+        </div>
+
+        <!-- 모바일 가로 스크롤 안내 -->
+        <div class="md:hidden flex items-center gap-1.5 bg-[#fbf6ec] text-[#78644e] text-[11px] px-3 py-1.5 rounded-xl border border-[#e8ddcb] mb-2">
+          <i class="fa-solid fa-arrows-left-right text-[#d97736] shrink-0"></i>
+          <span>모바일 화면에서는 표를 좌우로 밀어서 전체 항목을 확인하세요.</span>
+        </div>
+
+        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+          <table class="w-full text-left border-collapse text-sm min-w-[700px]">
+            <thead>
+              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">주문(납품)일자</th>
+                <th class="py-3 px-4 min-w-[135px] whitespace-nowrap">매장명 (납품처)</th>
+                <th class="py-3 px-4 min-w-[200px]">포함된 품목 내역</th>
+                <th class="py-3 px-4 min-w-[95px] text-right whitespace-nowrap">총 수량</th>
+                <th class="py-3 px-4 min-w-[115px] text-right whitespace-nowrap">총 금액</th>
+                <th class="py-3 px-4 min-w-[185px] text-center whitespace-nowrap">관리 및 인쇄</th>
+              </tr>
+            </thead>
+            <tbody id="history-body" class="divide-y divide-[#eee5d5]">
+              <!-- JS 동적 로드 -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- 게시판형 페이지네이션 바 -->
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4 pt-2 text-xs">
+          <div id="history-page-info" class="text-[#7a6f5d] font-medium">총 0건 중 0-0건 표시</div>
+          <div id="history-page-nav" class="flex items-center gap-1.5">
+            <!-- JS 동적 생성 -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. 협력업체(매장) 관리 탭 -->
+    <section id="view-stores" class="hidden space-y-6">
+      <div class="ghibli-card p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <i class="fa-solid fa-store text-[#3d7a5a]"></i> 4.19로 협력업체(매장) 관리
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">스마트 온실 작물을 정기 납품받는 동네 협력 매장 목록입니다.</p>
+          </div>
+          <button onclick="openStoreModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
+            <i class="fa-solid fa-plus text-emerald-300"></i> + 신규 매장 추가
+          </button>
+        </div>
+
+        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+          <table class="w-full text-left border-collapse text-sm min-w-[660px]">
+            <thead>
+              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                <th class="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
+                <th class="py-3 px-4 min-w-[140px] whitespace-nowrap">매장명(업소명)</th>
+                <th class="py-3 px-4 min-w-[240px]">소재지 (주소)</th>
+                <th class="py-3 px-4 min-w-[160px] whitespace-nowrap">대표 메뉴</th>
+                <th class="py-3 px-4 min-w-[100px] text-right whitespace-nowrap">가격</th>
+                <th class="py-3 px-4 min-w-[80px] text-center whitespace-nowrap">관리</th>
+              </tr>
+            </thead>
+            <tbody id="stores-table-body" class="divide-y divide-[#eee5d5]">
+              <!-- JS 동적 로드 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 작물/품목 및 기본 단가 관리 탭 -->
+    <section id="view-crops" class="hidden space-y-6">
+      <div class="ghibli-card p-4 sm:p-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <i class="fa-solid fa-leaf text-[#3d7a5a]"></i> 스마트 온실 재배 작물 &amp; 공급단가 관리
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">스마트팜 작물 품목을 등록하고 1g당 기본 공급단가를 설정합니다. 신규 납품 등록 시 자동 반영됩니다.</p>
+          </div>
+          <button onclick="openCropModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
+            <i class="fa-solid fa-plus text-emerald-300"></i> + 신규 작물 품목 등록
+          </button>
+        </div>
+
+        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+          <table class="w-full text-left border-collapse text-sm min-w-[680px]">
+            <thead>
+              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                <th class="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
+                <th class="py-3 px-4 min-w-[130px] whitespace-nowrap">작물(품목)명</th>
+                <th class="py-3 px-4 min-w-[100px] text-center whitespace-nowrap">분류</th>
+                <th class="py-3 px-4 min-w-[110px] text-right whitespace-nowrap">기본단가 (1g)</th>
+                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">100g 환산가</th>
+                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">1kg 환산가</th>
+                <th class="py-3 px-4 min-w-[180px]">비고 (용도/특징)</th>
+                <th class="py-3 px-4 min-w-[110px] text-center whitespace-nowrap">관리</th>
+              </tr>
+            </thead>
+            <tbody id="crops-table-body" class="divide-y divide-[#eee5d5]">
+              <!-- JS 동적 로드 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 업체별 결재내역 & 인쇄 탭 -->
+    <section id="view-settlement" class="hidden space-y-6">
+      <div class="ghibli-card p-4 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <i class="fa-solid fa-receipt text-[#d97736]"></i> 업체별 결재내역 &amp; 정산서 인쇄
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">매장별 월별 또는 지정 기간 납품 내역을 취합하고 정식 결재내역서(A4)를 출력합니다.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <select id="settle-store-select" class="px-3 py-2 text-xs ghibli-input font-medium" title="협력매장 선택">
+              <!-- JS 로 매장 목록 채움 -->
+            </select>
+            <!-- 월별 빠른 선택 -->
+            <select id="settle-month-select" onchange="onSettleMonthChange()" class="px-3 py-2 text-xs ghibli-input font-medium" title="월별 선택">
+              <option value="">전체 기간</option>
+              <option value="2026-10" selected>2026년 10월</option>
+              <option value="2026-09">2026년 9월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 9월</option>
+            </select>
+            <!-- 기간 직접 지정 -->
+            <div class="flex items-center gap-1 bg-[#fbf6ec] px-2 py-1 rounded-xl border border-[#e5dccb]">
+              <span class="text-[11px] text-[#716553] font-semibold">기간:</span>
+              <input type="date" id="settle-start-date" onchange="onSettleDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 시작일">
+              <span class="text-xs text-[#887a66]">~</span>
+              <input type="date" id="settle-end-date" onchange="onSettleDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 종료일">
+            </div>
+            <button onclick="loadStoreSettlement()" class="px-3.5 py-2 bg-[#42392d] hover:bg-[#322a20] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+              <i class="fa-solid fa-magnifying-glass"></i> 조회
+            </button>
+            <button onclick="printStoreSettlement()" class="px-3.5 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
+              <i class="fa-solid fa-print"></i> 결재내역서 인쇄
+            </button>
+          </div>
+        </div>
+
+        <!-- 요약 카드 (지브리 감성) -->
+        <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">납품 건수</span>
+            <span id="settle-summary-count" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0건</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">총 공급량</span>
+            <span id="settle-summary-qty" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0 g</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">총 결재금액</span>
+            <span id="settle-summary-amount" class="font-black text-[#2d5a43] text-base font-['Gowun_Dodum',sans-serif]">0 원</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+          <table class="w-full text-left border-collapse text-sm min-w-[720px]">
+            <thead>
+              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                <th class="py-3 px-3 w-12 text-center whitespace-nowrap">No</th>
+                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">주문일자</th>
+                <th class="py-3 px-4 min-w-[130px] whitespace-nowrap">품목</th>
+                <th class="py-3 px-4 min-w-[100px] text-right whitespace-nowrap">단가(원)</th>
+                <th class="py-3 px-4 min-w-[100px] text-right whitespace-nowrap">수량(g)</th>
+                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">금액(원)</th>
+                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">배송일자</th>
+                <th class="py-3 px-4 min-w-[140px]">비고</th>
+              </tr>
+            </thead>
+            <tbody id="settle-table-body" class="divide-y divide-[#eee5d5]">
+              <tr><td colspan="8" class="text-center py-8 text-[#887a66]">매장과 기간을 선택 후 [조회]를 눌러주세요.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 월별/기간별 총괄 정산 & 집계표 인쇄 탭 -->
+    <section id="view-summary" class="hidden space-y-6">
+      <div class="ghibli-card p-4 sm:p-6">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <i class="fa-solid fa-chart-pie text-[#3d7a5a]"></i> 총괄 정산 &amp; 집계표 인쇄 (월별 / 기간별)
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">전체 협력 매장의 월별 또는 기간별 마감 실적을 취합하고 공식 총괄 보고서(A4)를 출력합니다.</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <!-- 월별 빠른 선택 -->
+            <select id="monthly-summary-select" onchange="onSummaryMonthChange()" class="px-3 py-2 text-xs ghibli-input font-medium" title="월별 선택">
+              <option value="">전체 기간</option>
+              <option value="2026-10" selected>2026년 10월</option>
+              <option value="2026-09">2026년 9월</option>
+              <option value="2025-10">2025년 10월</option>
+              <option value="2025-09">2025년 9월</option>
+            </select>
+            <!-- 기간 직접 지정 -->
+            <div class="flex items-center gap-1 bg-[#fbf6ec] px-2 py-1 rounded-xl border border-[#e5dccb]">
+              <span class="text-[11px] text-[#716553] font-semibold">기간:</span>
+              <input type="date" id="summary-start-date" onchange="onSummaryDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 시작일">
+              <span class="text-xs text-[#887a66]">~</span>
+              <input type="date" id="summary-end-date" onchange="onSummaryDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 종료일">
+            </div>
+            <button onclick="loadMonthlySummary()" class="px-3.5 py-2 bg-[#42392d] hover:bg-[#322a20] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+              <i class="fa-solid fa-magnifying-glass"></i> 조회
+            </button>
+            <button onclick="printMonthlySummary()" class="px-4 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
+              <i class="fa-solid fa-print"></i> 총괄 집계표 인쇄
+            </button>
+          </div>
+        </div>
+
+        <!-- 4개 KPI 요약 (지브리 감성) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-center">
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">총 납품 매장수</span>
+            <span id="monthly-total-stores" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0개소</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">총 납품 횟수</span>
+            <span id="monthly-total-orders" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0건</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">총 공급 중량</span>
+            <span id="monthly-total-qty" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0 g</span>
+          </div>
+          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <span class="text-xs text-[#7a6f5d] block font-medium">총 공급 금액</span>
+            <span id="monthly-total-amount" class="font-black text-[#2d5a43] text-base font-['Gowun_Dodum',sans-serif]">0 원</span>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+          <table class="w-full text-left border-collapse text-sm min-w-[720px]">
+            <thead>
+              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                <th class="py-3 px-3 w-12 text-center whitespace-nowrap">No</th>
+                <th class="py-3 px-4 min-w-[150px] whitespace-nowrap">협력 매장명</th>
+                <th class="py-3 px-4 min-w-[90px] text-center whitespace-nowrap">납품 횟수</th>
+                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">총 공급량(g)</th>
+                <th class="py-3 px-4 min-w-[130px] text-right whitespace-nowrap">총 공급가액(원)</th>
+                <th class="py-3 px-4 min-w-[200px]">주요 납품 작물</th>
+              </tr>
+            </thead>
+            <tbody id="monthly-table-body" class="divide-y divide-[#eee5d5]">
+              <tr><td colspan="6" class="text-center py-8 text-[#887a66]">월을 선택 후 [조회]를 눌러주세요.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 공급자(강북구청) 정보 & 최신 엑셀 업로드 탭 -->
+    <section id="view-supplier" class="hidden space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
+        
+        <!-- 좌측: 공급자 정보 -->
+        <div class="ghibli-card p-5 sm:p-6">
+          <div class="pb-3 border-b border-[#eee5d6] mb-4">
+            <h2 class="text-base font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+              <i class="fa-solid fa-landmark text-[#3d7a5a]"></i> 공급자(강북구청) 정보 설정
+            </h2>
+            <p class="text-xs text-[#716553] mt-0.5">납품확인서/정산서에 기재되는 기관 기본 정보입니다.</p>
+          </div>
+
+          <form onsubmit="saveSupplierSettings(event)" class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">상호 / 기관명 *</label>
+              <input type="text" id="sup-name" required class="w-full px-3 py-2.5 ghibli-input text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">부서명 / 사업단</label>
+              <input type="text" id="sup-department" class="w-full px-3 py-2.5 ghibli-input text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">고유번호 / 사업자번호</label>
+              <input type="text" id="sup-biz-no" class="w-full px-3 py-2.5 ghibli-input text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">소재지 (주소)</label>
+              <input type="text" id="sup-address" class="w-full px-3 py-2.5 ghibli-input text-sm">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-[#574c3e] mb-1">담당자명</label>
+                <input type="text" id="sup-manager" class="w-full px-3 py-2.5 ghibli-input text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#574c3e] mb-1">연락처</label>
+                <input type="text" id="sup-tel" class="w-full px-3 py-2.5 ghibli-input text-sm">
+              </div>
+            </div>
+            <div class="pt-2 flex justify-end">
+              <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white font-bold rounded-2xl text-sm transition shadow-sm text-center active:scale-95">
+                <i class="fa-solid fa-check mr-1 text-emerald-300"></i> 공급자 정보 저장
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- 우측: 최신 엑셀 파일 업로드 -->
+        <div class="ghibli-card p-5 sm:p-6 flex flex-col justify-between">
+          <div>
+            <div class="pb-3 border-b border-[#eee5d6] mb-4">
+              <h2 class="text-base font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+                <i class="fa-solid fa-file-excel text-[#2d5a43]"></i> 최신 엑셀 파일 업로드 / 교체
+              </h2>
+              <p class="text-xs text-[#716553] mt-0.5">주무관님께 받은 최신 납품대장 엑셀 파일을 업로드합니다.</p>
+            </div>
+
+            <div class="bg-[#f0f8f2] border border-[#cbe5d2] rounded-2xl p-4 mb-4 text-xs text-[#315740] leading-relaxed shadow-xs">
+              <p class="font-bold text-[#1f4a30] mb-1 flex items-center gap-1.5">
+                <i class="fa-solid fa-shield-heart text-[#3d7a5a]"></i> 안전한 자동 백업 시스템
+              </p>
+              새 엑셀 파일을 업로드하시면 기존 파일은 <code class="bg-white px-1.5 py-0.5 rounded-md border border-[#c0dfc7] text-[#1c482d] font-bold">backups/</code> 폴더에 시간별로 안전하게 자동 보관되며, 시스템 전체가 최신 데이터로 즉시 전환됩니다.
+            </div>
+
+            <div class="border-2 border-dashed border-[#ded2bd] rounded-3xl p-6 text-center hover:border-[#3d7a5a] transition bg-[#faf5eb]">
+              <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#b0a18c] mb-2"></i>
+              <p class="text-xs font-bold text-[#5c5040] mb-3">최신 '납품대장.xlsx' 파일을 선택하세요</p>
+              <input type="file" id="excel-file-input" accept=".xlsx" class="block w-full text-xs text-[#6e614f] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#2d5a43] file:text-white hover:file:bg-[#234935] cursor-pointer">
+            </div>
+          </div>
+
+          <div class="pt-4">
+            <button onclick="handleExcelUpload()" class="w-full py-2.5 bg-[#42392d] hover:bg-[#322a20] text-white font-bold rounded-2xl text-sm transition shadow-sm flex items-center justify-center gap-2 active:scale-95">
+              <i class="fa-solid fa-upload text-amber-300"></i> 최신 엑셀 파일 적용하기
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 매장 등록/수정 모달 -->
+    <div id="store-modal" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden no-print">
+      <div class="bg-[#fcf8f0] border border-[#e5dccb] rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl relative">
+        <button onclick="closeStoreModal()" class="absolute top-4 right-4 text-[#8a7b66] hover:text-[#2d2720] text-lg font-bold w-8 h-8 rounded-full hover:bg-[#efe6d6] transition flex items-center justify-center">✕</button>
+        <h3 class="font-bold text-base text-[#26211a] font-['Gowun_Dodum',sans-serif] mb-1 flex items-center gap-2">
+          <i class="fa-solid fa-store text-[#3d7a5a]"></i> 협력 매장 등록 / 수정
+        </h3>
+        <p class="text-xs text-[#716553] mb-4">매장명과 주소를 입력하시면 납품 등록 시 자동 선택됩니다.</p>
+        
+        <form onsubmit="saveStoreItem(event)" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">매장명 (업소명) *</label>
+            <input type="text" id="modal-store-name" required placeholder="예: 419국수김밥" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">소재지 (주소)</label>
+            <input type="text" id="modal-store-addr" placeholder="예: 서울 강북구 4.19로 31" class="w-full px-3.5 py-2.5 ghibli-input text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">대표 활용 메뉴</label>
+            <input type="text" id="modal-store-menu" placeholder="예: 루꼴라 크림치즈김밥" class="w-full px-3.5 py-2.5 ghibli-input text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">메뉴 가격(원)</label>
+            <input type="text" id="modal-store-price" placeholder="예: 5000" class="w-full px-3.5 py-2.5 ghibli-input text-sm">
+          </div>
+          <div class="pt-3 flex gap-2">
+            <button type="button" onclick="closeStoreModal()" class="w-1/3 py-2.5 bg-[#f0e7d7] hover:bg-[#e4d9c6] text-[#4d4235] font-bold rounded-2xl text-xs transition">취소</button>
+            <button type="submit" class="w-2/3 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white font-bold rounded-2xl text-xs transition shadow-sm active:scale-95">매장 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 작물 등록/수정 모달 -->
+    <div id="crop-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden no-print">
+      <div class="bg-[#fdfaf3] border border-[#e6decd] rounded-3xl max-w-md w-full p-6 shadow-2xl relative">
+        <div class="flex items-center justify-between pb-3 border-b border-[#ebd7b2] mb-4">
+          <h3 id="crop-modal-title" class="font-bold text-base text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
+            <i class="fa-solid fa-leaf text-[#3d7a5a]"></i> <span>신규 작물 품목 등록</span>
+          </h3>
+          <button onclick="closeCropModal()" class="text-[#8a7b66] hover:text-[#2d2720] text-lg font-bold w-8 h-8 rounded-full hover:bg-[#efe6d6] transition flex items-center justify-center">✕</button>
+        </div>
+        
+        <form onsubmit="saveCropItem(event)" class="space-y-3.5">
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">작물(품목)명 *</label>
+            <input type="text" id="modal-crop-name" required placeholder="예: 루꼴라, 바질, 로즈마리 등" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">1g당 기본 공급단가 (원) *</label>
+            <input type="number" step="any" id="modal-crop-price" required oninput="previewCropPrice(this.value)" placeholder="예: 17.7" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
+            <p class="text-[11px] text-[#8c7d6b] mt-1" id="modal-crop-price-preview">100g: 0원 / 1kg: 0원</p>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">작물 분류</label>
+            <select id="modal-crop-category" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
+              <option value="허브류">허브류 (루꼴라, 바질, 애플민트 등)</option>
+              <option value="쌈채소">쌈채소 / 엽채류 (버터헤드, 상추 등)</option>
+              <option value="과채류">과채류 (딸기, 토마토 등)</option>
+              <option value="특용작물">특용작물 / 식용꽃</option>
+              <option value="기타">기타</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1">비고 (용도, 규격, 공급설명)</label>
+            <input type="text" id="modal-crop-remarks" placeholder="예: 생잎 납품, 카페 음료 가니시용 등" class="w-full px-3.5 py-2.5 ghibli-input text-sm">
+          </div>
+          <div class="pt-3 flex gap-2">
+            <button type="button" onclick="closeCropModal()" class="w-1/3 py-2.5 bg-[#f0e7d7] hover:bg-[#e4d9c6] text-[#4d4235] font-bold rounded-2xl text-xs transition">취소</button>
+            <button type="submit" class="w-2/3 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white font-bold rounded-2xl text-xs transition shadow-sm active:scale-95">작물 저장</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 납품 내역 수정 모달 -->
+    <div id="order-edit-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden no-print">
+      <div class="bg-[#fdfaf3] border border-[#e6decd] rounded-3xl max-w-3xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+        <!-- 헤더 -->
+        <div class="p-4 sm:p-5 bg-[#284837] text-white flex items-center justify-between shrink-0">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-pen-to-square text-emerald-300"></i>
+            <h3 id="edit-modal-title" class="font-bold text-base font-['Gowun_Dodum',sans-serif]">납품 내역 수정</h3>
+          </div>
+          <button onclick="closeEditOrderModal()" class="text-white/80 hover:text-white text-lg font-bold w-8 h-8 rounded-full hover:bg-black/20 transition flex items-center justify-center">✕</button>
+        </div>
+
+        <!-- 본문 -->
+        <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+          <!-- 기본 정보 -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">주문(납품)일자 *</label>
+              <input type="date" id="edit-order-date" class="w-full px-3 py-2 ghibli-input text-xs font-medium">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">납품처 (매장명) *</label>
+              <select id="edit-store-select" class="w-full px-3 py-2 ghibli-input text-xs font-medium"></select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">배송일자</label>
+              <input type="date" id="edit-delivery-date" class="w-full px-3 py-2 ghibli-input text-xs font-medium">
+            </div>
+          </div>
+
+          <!-- 품목 테이블 -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-[#574c3e]">납품 품목 목록</span>
+              <button type="button" onclick="addEditOrderItemRow()" class="px-3 py-1 bg-[#e6f3eb] text-[#245f3c] border border-[#bfded0] rounded-xl text-xs font-bold transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-plus text-[#2d5a43]"></i> 품목 추가
+              </button>
+            </div>
+            <div class="overflow-x-auto border border-[#e5dccb] rounded-xl bg-white shadow-xs">
+              <table class="w-full text-left border-collapse text-xs min-w-[620px]">
+                <thead>
+                  <tr class="bg-[#f4eee1] text-[#42382b] font-bold border-b border-[#e5dccb]">
+                    <th class="py-2.5 px-3 w-10 text-center whitespace-nowrap">No</th>
+                    <th class="py-2.5 px-3 min-w-[150px] whitespace-nowrap">작물명 *</th>
+                    <th class="py-2.5 px-3 min-w-[110px] whitespace-nowrap">수량(g) *</th>
+                    <th class="py-2.5 px-3 min-w-[90px] whitespace-nowrap">단가(원)</th>
+                    <th class="py-2.5 px-3 min-w-[100px] text-right whitespace-nowrap">금액(원)</th>
+                    <th class="py-2.5 px-3 min-w-[130px] whitespace-nowrap">비고</th>
+                    <th class="py-2.5 px-2 w-10 text-center whitespace-nowrap">삭제</th>
+                  </tr>
+                </thead>
+                <tbody id="edit-items-body" class="divide-y divide-[#eee5d5]"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- 요약 -->
+          <div class="bg-[#fbf7ee] p-3 rounded-2xl border border-[#e5dccb] flex items-center justify-between text-xs">
+            <span class="text-[#7a6f5d]">총 품목수: <b id="edit-summary-count" class="text-[#26211a]">0개</b> | 총 중량: <b id="edit-summary-qty" class="text-[#26211a]">0g</b></span>
+            <span class="text-sm font-black text-[#2d5a43]">총 공급가액: <span id="edit-summary-amount">0</span>원</span>
+          </div>
+        </div>
+
+        <!-- 푸터 -->
+        <div class="p-4 bg-[#fbf7ee] border-t border-[#eee5d5] flex justify-end gap-2 shrink-0">
+          <button type="button" onclick="closeEditOrderModal()" class="px-5 py-2.5 bg-[#ede4d4] hover:bg-[#dfd4c2] text-[#4d4235] font-bold rounded-2xl text-xs transition">취소</button>
+          <button type="button" onclick="submitOrderEdit(event)" class="px-6 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white font-bold rounded-2xl text-xs transition shadow-sm active:scale-95">수정 저장하기</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ======================================================== -->
+  <!-- 인쇄 전용 출력 템플릿 (A4 상단 공급자용 + 하단 공급받는자용) -->
+  <!-- ======================================================== -->
+  <div id="print-area" class="hidden">
+    <div id="receipt-container" class="bg-white text-black p-4 max-w-[210mm] mx-auto text-[11px] leading-tight">
+      <!-- 동적 주입 -->
+    </div>
+  </div>
+
+  <!-- 인쇄 미리보기 모달 (화면 전용) -->
+  <div id="preview-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 hidden no-print">
+    <div class="bg-[#fbf7ed] border border-[#e0d5c0] rounded-2xl sm:rounded-3xl max-w-4xl w-full h-[95vh] sm:h-auto sm:max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-3 sm:p-4 bg-[#213f2f] text-white flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-2 min-w-0">
+          <i class="fa-solid fa-receipt text-emerald-300 shrink-0"></i>
+          <span class="font-bold text-xs sm:text-sm font-['Gowun_Dodum',sans-serif] truncate">공식 납품확인서 미리보기</span>
+          <span class="hidden sm:inline text-xs bg-black/25 text-emerald-100 px-2 py-0.5 rounded-full border border-white/20">A4 2벌 절취형</span>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0">
+          <button onclick="triggerPrint()" class="px-3.5 sm:px-4 py-1.5 bg-gradient-to-r from-[#3d7a5a] to-[#4f9a72] hover:from-[#32674b] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow active:scale-95">
+            <i class="fa-solid fa-print"></i> <span>인쇄하기</span>
+          </button>
+          <button onclick="closePreviewModal()" class="w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white/90 flex items-center justify-center text-sm transition">
+            ✕
+          </button>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-2 sm:p-6 bg-[#ebe4d4] flex justify-center shadow-inner">
+        <div id="modal-preview-content" class="bg-white p-3 sm:p-6 shadow-2xl max-w-[210mm] w-full border border-[#d8cdb8] rounded-xs overflow-x-auto">
+          <!-- 미리보기 렌더링 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 스마트폰 접속 QR 모달 -->
+  <div id="qr-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden no-print">
+    <div class="bg-[#fdfaf3] border border-[#e6decd] rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative">
+      <button onclick="closeMobileQrModal()" class="absolute top-4 right-4 text-[#8a7b66] hover:text-[#2d2720] text-lg font-bold w-8 h-8 rounded-full hover:bg-[#efe6d6] transition flex items-center justify-center">✕</button>
+      <div class="w-13 h-13 bg-[#fdf3e7] text-[#d97736] border border-[#f6ddc1] rounded-2xl flex items-center justify-center text-xl mx-auto mb-3 shadow-xs">
+        <i class="fa-solid fa-qrcode text-2xl"></i>
+      </div>
+      <h3 class="font-bold text-base text-[#26211a] font-['Gowun_Dodum',sans-serif]">스마트폰으로 바로 접속하기</h3>
+      <p class="text-xs text-[#716553] mt-1 mb-4 leading-relaxed">스마트폰 기본 카메라로 아래 QR코드를 비추시면 외부(LTE/5G)에서도 즉시 열립니다.</p>
+      
+      <div class="bg-white p-4 rounded-2xl border border-[#e6decd] inline-block mb-4 shadow-xs">
+        <img id="qr-image" src="/static/mobile_qr.png" alt="스마트폰 접속 QR" class="w-48 h-48 mx-auto object-contain">
+        <p id="qr-loading" class="text-xs text-[#8a7b66] py-16 hidden">인터넷 주소 연결 중...</p>
+      </div>
+
+      <div class="space-y-2">
+        <input type="text" id="tunnel-url-input" readonly placeholder="주소 생성 중..." class="w-full text-xs text-center font-mono bg-[#faf5eb] border border-[#ded3be] py-2.5 px-3 rounded-xl text-[#5c5040] select-all">
+        <button onclick="copyTunnelUrl()" class="w-full py-2.5 bg-gradient-to-r from-[#d97736] to-[#e68a35] hover:from-[#c26527] text-white text-xs font-bold rounded-2xl transition flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+          <i class="fa-regular fa-copy"></i> 주소 복사하기 (카톡 전송용)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 전역 상태
+    let metaData = { stores: [], crops: {}, supplier: {} };
+    let rowIdCounter = 0;
+
+    // 초기화
+    document.addEventListener("DOMContentLoaded", async () => {
+      // 오늘 날짜 세팅
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById("order-date").value = today;
+      document.getElementById("delivery-date").value = today;
+      
+      await loadMeta();
+      addItemRow(); // 기본 1행 추가
+    });
+
+    // 월별 선택 드롭다운 생성 (현재월 기준 이전 12개월)
+    function populateMonthDropdowns() {
+      const now = new Date();
+      const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const months = [];
+      for (let i = 0; i < 15; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        const label = `${d.getFullYear()}년 ${d.getMonth() + 1}월`;
+        months.push({ ym, label });
+      }
+
+      const filterMonth = document.getElementById("filter-month");
+      if (filterMonth) {
+        filterMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
+          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        ).join('');
+      }
+
+      const settleMonth = document.getElementById("settle-month-select");
+      if (settleMonth) {
+        settleMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
+          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        ).join('');
+      }
+
+      const summaryMonth = document.getElementById("monthly-summary-select");
+      if (summaryMonth) {
+        summaryMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
+          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        ).join('');
+      }
+    }
+
+    // 탭 전환 (6개 탭 지원)
+    function switchTab(tab) {
+      const allTabs = ['register', 'history', 'stores', 'crops', 'settlement', 'summary', 'supplier'];
+      allTabs.forEach(t => {
+        const viewEl = document.getElementById(`view-${t}`);
+        const tabBtn = document.getElementById(`tab-${t}`);
+        if (viewEl) viewEl.classList.add('hidden');
+        if (tabBtn) {
+          tabBtn.classList.remove('active', 'text-slate-900');
+          tabBtn.classList.add('text-slate-500');
+        }
+      });
+
+      const activeView = document.getElementById(`view-${tab}`);
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeView) activeView.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.add('active', 'text-slate-900');
+        activeBtn.classList.remove('text-slate-500');
+      }
+
+      if (tab === 'history') loadOrdersHistory();
+      if (tab === 'stores') loadStoresList();
+      if (tab === 'crops') loadCropsList();
+      if (tab === 'settlement') loadStoreSettlement();
+      if (tab === 'summary') loadMonthlySummary();
+    }
+
+    // 메타데이터 불러오기
+    async function loadMeta() {
+      try {
+        const res = await fetch('/api/meta');
+        metaData = await res.json();
+        
+        // 1. 주문등록 매장 드롭다운 채우기
+        const storeSelect = document.getElementById("store-select");
+        storeSelect.innerHTML = '<option value="">-- 매장 선택 --</option>';
+        metaData.stores.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.name;
+          opt.textContent = `${s.name} ${s.address ? `(${s.address})` : ''}`;
+          storeSelect.appendChild(opt);
+        });
+        const directOpt = document.createElement("option");
+        directOpt.value = "__DIRECT__";
+        directOpt.textContent = "✏️ 직접 입력...";
+        storeSelect.appendChild(directOpt);
+
+        // 2. 결재내역 매장 드롭다운 채우기
+        const settleStoreSelect = document.getElementById("settle-store-select");
+        if (settleStoreSelect) {
+          settleStoreSelect.innerHTML = '<option value="">-- 매장 선택 --</option>';
+          metaData.stores.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.name;
+            opt.textContent = s.name;
+            settleStoreSelect.appendChild(opt);
+          });
+          if (metaData.stores.length > 0) {
+            settleStoreSelect.value = metaData.stores[0].name;
+          }
+        }
+
+        // 3. 월 드롭다운 채우기
+        populateMonthDropdowns();
+
+        // 4. 공급자 폼 채우기
+        if (metaData.supplier) {
+          document.getElementById("sup-name").value = metaData.supplier.name || "";
+          document.getElementById("sup-department").value = metaData.supplier.department || "";
+          document.getElementById("sup-biz-no").value = metaData.supplier.biz_no || "";
+          document.getElementById("sup-address").value = metaData.supplier.address || "";
+          document.getElementById("sup-manager").value = metaData.supplier.manager || "";
+          document.getElementById("sup-tel").value = metaData.supplier.tel || "";
+        }
+      } catch (err) {
+        console.error("메타데이터 로드 실패:", err);
+      }
+    }
+
+    function onStoreSelectChange() {
+      const select = document.getElementById("store-select");
+      const customInput = document.getElementById("store-custom");
+      if (select.value === "__DIRECT__") {
+        customInput.classList.remove("hidden");
+        customInput.focus();
+      } else {
+        customInput.classList.add("hidden");
+      }
+    }
+
+    // 품목 행 추가
+    function addItemRow(defaultCrop = "루꼴라", defaultQty = 500) {
+      rowIdCounter++;
+      const tbody = document.getElementById("items-body");
+      const tr = document.createElement("tr");
+      tr.id = `item-row-${rowIdCounter}`;
+      tr.className = "hover:bg-[#fbf7ee] transition-colors";
+
+      const cropsOptions = Object.keys(metaData.crops).map(c => {
+        let icon = "🌱";
+        if (c.includes("루꼴라")) icon = "🌿";
+        if (c.includes("바질")) icon = "🍃";
+        if (c.includes("민트")) icon = "🪴";
+        if (c.includes("버터헤드") || c.includes("상추")) icon = "🥬";
+        return `<option value="${c}" ${c === defaultCrop ? 'selected' : ''}>${icon} ${c} (${metaData.crops[c]}원/g)</option>`;
+      }).join('') + `<option value="__CUSTOM__">✏️ 기타(직접입력)</option>`;
+
+      const initPrice = metaData.crops[defaultCrop] || 0;
+
+      tr.innerHTML = `
+        <td class="py-3 px-3 text-center text-xs text-[#9c8e7c] font-bold row-no"></td>
+        <td class="py-3 px-4">
+          <select onchange="onCropChange(${rowIdCounter})" class="crop-select w-full px-3 py-2 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-sm font-semibold text-[#2c261e] focus:ring-1 focus:ring-[#3d7a5a] focus:bg-white focus:outline-none">
+            ${cropsOptions}
+          </select>
+          <input type="text" placeholder="작물명 입력" class="crop-custom hidden mt-1 w-full px-2 py-1 text-xs border border-[#ded5c4] rounded-lg">
+        </td>
+        <td class="py-3 px-4">
+          <div class="relative">
+            <input type="number" step="any" value="${defaultQty}" oninput="calcRow(${rowIdCounter})" class="qty-input w-full px-3 py-2 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-sm font-bold text-[#2c261e] focus:ring-1 focus:ring-[#3d7a5a] focus:bg-white focus:outline-none pr-7">
+            <span class="absolute right-2.5 top-2.5 text-xs text-[#8c7e6b] font-medium">g</span>
+          </div>
+        </td>
+        <td class="py-3 px-4">
+          <input type="number" step="any" value="${initPrice}" oninput="calcRow(${rowIdCounter})" class="price-input w-full px-3 py-2 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-sm focus:ring-1 focus:ring-[#3d7a5a] focus:bg-white focus:outline-none font-medium">
+        </td>
+        <td class="py-3 px-4 text-right">
+          <span class="amount-text font-black text-[#2d5a43] text-sm">0</span> 원
+        </td>
+        <td class="py-3 px-4">
+          <input type="text" placeholder="비고(소분/시식 등)" class="remarks-input w-full px-3 py-2 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-xs focus:ring-1 focus:ring-[#3d7a5a] focus:bg-white focus:outline-none">
+        </td>
+        <td class="py-3 px-3 text-center">
+          <button type="button" onclick="removeItemRow(${rowIdCounter})" class="text-[#b5a794] hover:text-[#c55238] transition text-sm">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+      calcRow(rowIdCounter);
+      updateRowNumbers();
+    }
+
+    function removeItemRow(id) {
+      const row = document.getElementById(`item-row-${id}`);
+      if (row) {
+        row.remove();
+        updateRowNumbers();
+        calcTotals();
+      }
+    }
+
+    function updateRowNumbers() {
+      const rows = document.querySelectorAll("#items-body tr");
+      rows.forEach((r, idx) => {
+        r.querySelector(".row-no").textContent = idx + 1;
+      });
+    }
+
+    function onCropChange(id) {
+      const row = document.getElementById(`item-row-${id}`);
+      const cropSelect = row.querySelector(".crop-select");
+      const cropCustom = row.querySelector(".crop-custom");
+      const priceInput = row.querySelector(".price-input");
+
+      if (cropSelect.value === "__CUSTOM__") {
+        cropCustom.classList.remove("hidden");
+        cropCustom.focus();
+        priceInput.value = 0;
+      } else {
+        cropCustom.classList.add("hidden");
+        const cropName = cropSelect.value;
+        priceInput.value = metaData.crops[cropName] || 0;
+      }
+      calcRow(id);
+    }
+
+    function calcRow(id) {
+      const row = document.getElementById(`item-row-${id}`);
+      if (!row) return;
+      const qty = parseFloat(row.querySelector(".qty-input").value) || 0;
+      const price = parseFloat(row.querySelector(".price-input").value) || 0;
+      const amount = Math.round(qty * price);
+      row.querySelector(".amount-text").textContent = amount.toLocaleString();
+      calcTotals();
+    }
+
+    function calcTotals() {
+      const rows = document.querySelectorAll("#items-body tr");
+      let totalCount = rows.length;
+      let totalQty = 0;
+      let totalAmount = 0;
+
+      rows.forEach(r => {
+        const qty = parseFloat(r.querySelector(".qty-input").value) || 0;
+        const price = parseFloat(r.querySelector(".price-input").value) || 0;
+        totalQty += qty;
+        totalAmount += Math.round(qty * price);
+      });
+
+      document.getElementById("summary-count").textContent = `${totalCount}개`;
+      document.getElementById("summary-qty").textContent = `${totalQty.toLocaleString()} g`;
+      document.getElementById("summary-amount").textContent = `${totalAmount.toLocaleString()} 원`;
+    }
+
+    function resetOrderForm() {
+      document.getElementById("store-select").value = "";
+      document.getElementById("store-custom").value = "";
+      document.getElementById("store-custom").classList.add("hidden");
+      document.getElementById("items-body").innerHTML = "";
+      addItemRow("루꼴라", 500);
+    }
+
+    // 주문 제출
+    async function submitOrder(andPrint = false) {
+      const orderDate = document.getElementById("order-date").value;
+      const deliveryDate = document.getElementById("delivery-date").value;
+      const storeSelect = document.getElementById("store-select").value;
+      const storeCustom = document.getElementById("store-custom").value.trim();
+      
+      const storeName = storeSelect === "__DIRECT__" ? storeCustom : storeSelect;
+      if (!storeName) {
+        alert("납품처(매장명)를 선택하거나 입력해주세요.");
+        return;
+      }
+
+      const rows = document.querySelectorAll("#items-body tr");
+      if (rows.length === 0) {
+        alert("최소 1개 이상의 품목을 입력해주세요.");
+        return;
+      }
+
+      const items = [];
+      for (const r of rows) {
+        const cropSelect = r.querySelector(".crop-select").value;
+        const cropCustom = r.querySelector(".crop-custom").value.trim();
+        const crop = cropSelect === "__CUSTOM__" ? cropCustom : cropSelect;
+        const qty = parseFloat(r.querySelector(".qty-input").value) || 0;
+        const unit_price = parseFloat(r.querySelector(".price-input").value) || 0;
+        const remarks = r.querySelector(".remarks-input").value.trim();
+
+        if (!crop) {
+          alert("작물명을 입력해주세요.");
+          return;
+        }
+        if (qty <= 0) {
+          alert(`'${crop}' 품목의 수량을 올바르게 입력해주세요.`);
+          return;
+        }
+
+        items.push({ crop, qty, unit_price, remarks });
+      }
+
+      try {
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_date: orderDate,
+            delivery_date: deliveryDate,
+            store_name: storeName,
+            items: items
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "저장 중 오류가 발생했습니다.");
+          return;
+        }
+
+        // 성공
+        if (andPrint) {
+          await openReceiptModal(data.order_key);
+        } else {
+          alert(`성공: ${storeName} 납품 내역이 납품대장.xlsx에 정상 저장되었습니다.`);
+        }
+        resetOrderForm();
+
+      } catch (err) {
+        alert("서버 통신 오류가 발생했습니다: " + err.message);
+      }
+    }
+
+    // 최근 내역 페이징 및 필터 제어
+    let currentHistoryOrders = [];
+    let currentHistoryPage = 1;
+    const historyPageSize = 15;
+
+    function onFilterChange() {
+      currentHistoryPage = 1;
+      loadOrdersHistory();
+    }
+
+    // 최근 내역 로드
+    async function loadOrdersHistory() {
+      const monthVal = document.getElementById("filter-month").value;
+      const dateVal = document.getElementById("filter-date").value;
+      const storeVal = document.getElementById("filter-store").value;
+      const tbody = document.getElementById("history-body");
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-[#887a66]">데이터를 불러오는 중...</td></tr>';
+
+      try {
+        let url = `/api/orders?limit=500`;
+        if (dateVal) {
+          url += `&search_date=${dateVal}`;
+        } else if (monthVal) {
+          url += `&year_month=${monthVal}`;
+        }
+        if (storeVal) url += `&search_store=${encodeURIComponent(storeVal)}`;
+
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`서버 응답 오류 (${res.status})`);
+        const list = await res.json();
+        currentHistoryOrders = Array.isArray(list) ? list : [];
+
+        // 1. 요약 통계 계산
+        let totalCount = currentHistoryOrders.length;
+        let totalQty = 0;
+        let totalAmount = 0;
+        currentHistoryOrders.forEach(it => {
+          totalQty += (it.total_qty || 0);
+          totalAmount += (it.total_amount || 0);
+        });
+
+        const periodLabel = dateVal ? dateVal : (monthVal ? `${monthVal.replace('-', '년 ')}월` : "전체 기간");
+        document.getElementById("hist-summary-period").textContent = periodLabel;
+        document.getElementById("hist-summary-count").textContent = `${totalCount.toLocaleString()}건`;
+        document.getElementById("hist-summary-qty").textContent = `${totalQty.toLocaleString()}g`;
+        document.getElementById("hist-summary-amount").textContent = `${Math.round(totalAmount).toLocaleString()}원`;
+
+        // 2. 현재 페이지 렌더링
+        renderHistoryPage();
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-red-500 font-bold">조회 실패: ${err.message}</td></tr>`;
+      }
+    }
+
+    // 게시판형 페이지 렌더링 함수
+    function renderHistoryPage() {
+      const tbody = document.getElementById("history-body");
+      const total = currentHistoryOrders.length;
+
+      if (total === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-[#887a66]">검색 조건에 맞는 내역이 없습니다.</td></tr>';
+        document.getElementById("history-page-info").textContent = "총 0건";
+        document.getElementById("history-page-nav").innerHTML = "";
+        return;
+      }
+
+      const totalPages = Math.ceil(total / historyPageSize);
+      if (currentHistoryPage > totalPages) currentHistoryPage = totalPages;
+      if (currentHistoryPage < 1) currentHistoryPage = 1;
+
+      const startIdx = (currentHistoryPage - 1) * historyPageSize;
+      const endIdx = Math.min(startIdx + historyPageSize, total);
+      const pageItems = currentHistoryOrders.slice(startIdx, endIdx);
+
+      tbody.innerHTML = pageItems.map(item => {
+        const itemsDesc = (item.items || []).map(it => `${it.crop} ${it.qty}g`).join(', ');
+        return `
+          <tr class="hover:bg-[#fbf7ee] transition">
+            <td class="py-3 px-4 font-semibold text-[#42382b] text-center">${item.order_date}</td>
+            <td class="py-3 px-4 font-bold text-[#26211a]">${item.store_name}</td>
+            <td class="py-3 px-4 text-[#6e6353] text-xs">${itemsDesc}</td>
+            <td class="py-3 px-4 text-right font-bold text-[#42382b]">${item.total_qty.toLocaleString()}g</td>
+            <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${Math.round(item.total_amount).toLocaleString()}원</td>
+            <td class="py-3 px-4 text-center whitespace-nowrap">
+              <div class="flex items-center justify-center gap-1.5">
+                <button onclick="openReceiptModal('${item.order_key}')" class="px-2.5 py-1.5 bg-[#fbf7ee] hover:bg-[#efe6d6] border border-[#ded2bc] text-[#3d3326] rounded-xl text-xs font-bold shadow-xs transition active:scale-95" title="확인서 인쇄">
+                  <i class="fa-solid fa-print text-[#d97736]"></i> 인쇄
+                </button>
+                <button onclick="openEditOrderModal('${item.order_key}')" class="px-2.5 py-1.5 bg-[#eef6f1] hover:bg-[#dcefe3] border border-[#c4e3d0] text-[#245f3c] rounded-xl text-xs font-bold shadow-xs transition active:scale-95" title="내역 수정">
+                  <i class="fa-solid fa-pen-to-square"></i> 수정
+                </button>
+                <button onclick="deleteOrder('${item.order_key}', '${item.store_name}', '${item.order_date}')" class="px-2.5 py-1.5 bg-[#fdf2f0] hover:bg-[#fde4e0] border border-[#f7c9c0] text-[#c54530] rounded-xl text-xs font-bold shadow-xs transition active:scale-95" title="내역 삭제">
+                  <i class="fa-solid fa-trash-can"></i> 삭제
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      // 페이지 정보 텍스트
+      document.getElementById("history-page-info").textContent = `총 ${total.toLocaleString()}건 중 ${startIdx + 1}-${endIdx}건 표시 (페이지 ${currentHistoryPage} / ${totalPages})`;
+
+      // 페이지네이션 버튼 바
+      let navHtml = '';
+      if (currentHistoryPage > 1) {
+        navHtml += `<button onclick="goToHistoryPage(${currentHistoryPage - 1})" class="px-2.5 py-1 bg-white hover:bg-[#f5efe3] border border-[#ded2bd] rounded-lg text-xs font-bold transition">◀ 이전</button>`;
+      }
+      
+      const maxButtons = 5;
+      let startP = Math.max(1, currentHistoryPage - Math.floor(maxButtons / 2));
+      let endP = Math.min(totalPages, startP + maxButtons - 1);
+      if (endP - startP + 1 < maxButtons) {
+        startP = Math.max(1, endP - maxButtons + 1);
+      }
+
+      for (let p = startP; p <= endP; p++) {
+        if (p === currentHistoryPage) {
+          navHtml += `<button class="px-2.5 py-1 bg-[#2d5a43] text-white rounded-lg text-xs font-bold shadow-xs">${p}</button>`;
+        } else {
+          navHtml += `<button onclick="goToHistoryPage(${p})" class="px-2.5 py-1 bg-white hover:bg-[#f5efe3] border border-[#ded2bd] text-[#4d4235] rounded-lg text-xs font-medium transition">${p}</button>`;
+        }
+      }
+
+      if (currentHistoryPage < totalPages) {
+        navHtml += `<button onclick="goToHistoryPage(${currentHistoryPage + 1})" class="px-2.5 py-1 bg-white hover:bg-[#f5efe3] border border-[#ded2bd] rounded-lg text-xs font-bold transition">다음 ▶</button>`;
+      }
+
+      document.getElementById("history-page-nav").innerHTML = navHtml;
+    }
+
+    function goToHistoryPage(page) {
+      currentHistoryPage = page;
+      renderHistoryPage();
+    }
+
+    // 구글 시트 전체 동기화 실행
+    async function syncGoogleSheetNow() {
+      if (!confirm("로컬 엑셀의 모든 납품 내역과 작물 단가를 구글 스프레드시트에 즉시 100% 동기화하시겠습니까?")) {
+        return;
+      }
+      try {
+        const btn = event?.currentTarget;
+        if (btn) btn.disabled = true;
+        const res = await fetch("/api/google-sheet/sync-now", { method: "POST" });
+        const data = await res.json();
+        if (btn) btn.disabled = false;
+        if (!res.ok) {
+          alert("동기화 실패: " + (data.detail || data.message || "오류가 발생했습니다."));
+          return;
+        }
+        alert("🎉 " + data.message);
+      } catch (err) {
+        alert("통신 오류: " + err.message);
+      }
+    }
+
+    // 주문 삭제 함수
+    async function deleteOrder(orderKey, storeName, orderDate) {
+      if (!confirm(`[납품 내역 삭제 확인]\n${storeName}의 ${orderDate} 납품 내역을 정말 삭제하시겠습니까?\n삭제된 내역은 대장 및 결재 목록에서 제외되며, 원본은 백업 폴더에 안전하게 보관됩니다.`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/orders/${encodeURIComponent(orderKey)}`, {
+          method: "DELETE"
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "삭제 중 오류가 발생했습니다.");
+          return;
+        }
+        alert(data.message || "성공적으로 삭제되었습니다.");
+        await loadOrdersHistory();
+        await loadMeta();
+      } catch (err) {
+        alert("삭제 통신 오류: " + err.message);
+      }
+    }
+
+    // 주문 수정 모달 제어
+    let currentEditOrderKey = "";
+    let editRowCounter = 0;
+
+    async function openEditOrderModal(orderKey) {
+      try {
+        const res = await fetch(`/api/receipt/${encodeURIComponent(orderKey)}`);
+        if (!res.ok) {
+          alert("주문 정보를 불러오지 못했습니다.");
+          return;
+        }
+        const data = await res.json();
+        currentEditOrderKey = orderKey;
+
+        document.getElementById("edit-modal-title").textContent = `납품 내역 수정 (${data.store_name} - ${data.order_date})`;
+        document.getElementById("edit-order-date").value = data.order_date;
+        document.getElementById("edit-delivery-date").value = data.delivery_date || data.order_date;
+
+        const storeSelect = document.getElementById("edit-store-select");
+        storeSelect.innerHTML = "";
+        metaData.stores.forEach(s => {
+          const opt = document.createElement("option");
+          opt.value = s.name;
+          opt.textContent = s.name;
+          if (s.name === data.store_name) opt.selected = true;
+          storeSelect.appendChild(opt);
+        });
+        if (!metaData.stores.some(s => s.name === data.store_name)) {
+          const opt = document.createElement("option");
+          opt.value = data.store_name;
+          opt.textContent = data.store_name;
+          opt.selected = true;
+          storeSelect.appendChild(opt);
+        }
+
+        const tbody = document.getElementById("edit-items-body");
+        tbody.innerHTML = "";
+        editRowCounter = 0;
+
+        (data.items || []).forEach(it => {
+          addEditOrderItemRow(it.crop, it.qty, it.unit_price, it.remarks);
+        });
+
+        calcEditTotals();
+        document.getElementById("order-edit-modal").classList.remove("hidden");
+      } catch (err) {
+        alert("주문 정보 로드 실패: " + err.message);
+      }
+    }
+
+    function closeEditOrderModal() {
+      document.getElementById("order-edit-modal").classList.add("hidden");
+    }
+
+    function addEditOrderItemRow(defaultCrop = "루꼴라", defaultQty = 500, defaultPrice = null, defaultRemarks = "") {
+      editRowCounter++;
+      const tbody = document.getElementById("edit-items-body");
+      const tr = document.createElement("tr");
+      tr.id = `edit-item-row-${editRowCounter}`;
+      tr.className = "hover:bg-[#fbf7ee] transition-colors";
+
+      const cropsList = Object.keys(metaData.crops);
+      if (!cropsList.includes(defaultCrop) && defaultCrop) {
+        cropsList.push(defaultCrop);
+      }
+
+      const cropsOptions = cropsList.map(c => {
+        const p = metaData.crops[c] ?? 0;
+        return `<option value="${c}" ${c === defaultCrop ? 'selected' : ''}>${c} (${p}원/g)</option>`;
+      }).join('');
+
+      const initPrice = defaultPrice !== null ? defaultPrice : (metaData.crops[defaultCrop] || 0);
+
+      tr.innerHTML = `
+        <td class="py-2.5 px-3 text-center text-xs text-[#9c8e7c] font-bold edit-row-no"></td>
+        <td class="py-2.5 px-3">
+          <select onchange="onEditCropChange(${editRowCounter})" class="edit-crop-select w-full px-2.5 py-1.5 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-xs font-semibold text-[#2c261e]">
+            ${cropsOptions}
+          </select>
+        </td>
+        <td class="py-2.5 px-3">
+          <input type="number" step="any" value="${defaultQty}" oninput="calcEditRow(${editRowCounter})" class="edit-qty-input w-full px-2.5 py-1.5 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-xs font-bold text-[#2c261e]">
+        </td>
+        <td class="py-2.5 px-3">
+          <input type="number" step="any" value="${initPrice}" oninput="calcEditRow(${editRowCounter})" class="edit-price-input w-full px-2.5 py-1.5 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-xs font-medium">
+        </td>
+        <td class="py-2.5 px-3 text-right">
+          <span class="edit-amount-text font-black text-[#2d5a43] text-xs">0</span> 원
+        </td>
+        <td class="py-2.5 px-3">
+          <input type="text" value="${defaultRemarks || ''}" placeholder="비고" class="edit-remarks-input w-full px-2.5 py-1.5 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-xs">
+        </td>
+        <td class="py-2.5 px-2 text-center">
+          <button type="button" onclick="removeEditItemRow(${editRowCounter})" class="text-[#b5a794] hover:text-[#c55238] transition text-xs">
+            <i class="fa-solid fa-trash-can"></i>
+          </button>
+        </td>
+      `;
+
+      tbody.appendChild(tr);
+      calcEditRow(editRowCounter);
+      updateEditRowNumbers();
+    }
+
+    function removeEditItemRow(id) {
+      const row = document.getElementById(`edit-item-row-${id}`);
+      if (row) {
+        row.remove();
+        updateEditRowNumbers();
+        calcEditTotals();
+      }
+    }
+
+    function updateEditRowNumbers() {
+      const rows = document.querySelectorAll("#edit-items-body tr");
+      rows.forEach((r, idx) => {
+        r.querySelector(".edit-row-no").textContent = idx + 1;
+      });
+    }
+
+    function onEditCropChange(id) {
+      const row = document.getElementById(`edit-item-row-${id}`);
+      const cropSelect = row.querySelector(".edit-crop-select");
+      const priceInput = row.querySelector(".edit-price-input");
+      const cropName = cropSelect.value;
+      priceInput.value = metaData.crops[cropName] || 0;
+      calcEditRow(id);
+    }
+
+    function calcEditRow(id) {
+      const row = document.getElementById(`edit-item-row-${id}`);
+      if (!row) return;
+      const qty = parseFloat(row.querySelector(".edit-qty-input").value) || 0;
+      const price = parseFloat(row.querySelector(".edit-price-input").value) || 0;
+      const amount = Math.round(qty * price);
+      row.querySelector(".edit-amount-text").textContent = amount.toLocaleString();
+      calcEditTotals();
+    }
+
+    function calcEditTotals() {
+      const rows = document.querySelectorAll("#edit-items-body tr");
+      let totalCount = rows.length;
+      let totalQty = 0;
+      let totalAmount = 0;
+
+      rows.forEach(r => {
+        const qty = parseFloat(r.querySelector(".edit-qty-input").value) || 0;
+        const price = parseFloat(r.querySelector(".edit-price-input").value) || 0;
+        totalQty += qty;
+        totalAmount += Math.round(qty * price);
+      });
+
+      document.getElementById("edit-summary-count").textContent = `${totalCount}개`;
+      document.getElementById("edit-summary-qty").textContent = `${totalQty.toLocaleString()}g`;
+      document.getElementById("edit-summary-amount").textContent = totalAmount.toLocaleString();
+    }
+
+    async function submitOrderEdit(e) {
+      e.preventDefault();
+      const orderDate = document.getElementById("edit-order-date").value;
+      const deliveryDate = document.getElementById("edit-delivery-date").value;
+      const storeName = document.getElementById("edit-store-select").value;
+
+      const rows = document.querySelectorAll("#edit-items-body tr");
+      if (rows.length === 0) {
+        alert("최소 1개 이상의 품목을 입력해주세요.");
+        return;
+      }
+
+      const items = [];
+      for (const r of rows) {
+        const crop = r.querySelector(".edit-crop-select").value;
+        const qty = parseFloat(r.querySelector(".edit-qty-input").value) || 0;
+        const unit_price = parseFloat(r.querySelector(".edit-price-input").value) || 0;
+        const remarks = r.querySelector(".edit-remarks-input").value.trim();
+
+        if (!crop) {
+          alert("작물명을 입력해주세요.");
+          return;
+        }
+        if (qty <= 0) {
+          alert(`'${crop}' 품목의 수량을 올바르게 입력해주세요.`);
+          return;
+        }
+
+        items.push({ crop, qty, unit_price, remarks });
+      }
+
+      try {
+        const res = await fetch(`/api/orders/${encodeURIComponent(currentEditOrderKey)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_date: orderDate,
+            delivery_date: deliveryDate,
+            store_name: storeName,
+            items: items
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "수정 중 오류가 발생했습니다.");
+          return;
+        }
+
+        alert(data.message || "납품 내역이 성공적으로 수정되었습니다.");
+        closeEditOrderModal();
+        await loadOrdersHistory();
+        await loadMeta();
+      } catch (err) {
+        alert("수정 통신 오류: " + err.message);
+      }
+    }
+
+    // 공급자 설정 저장
+    async function saveSupplierSettings(e) {
+      e.preventDefault();
+      const payload = {
+        name: document.getElementById("sup-name").value,
+        department: document.getElementById("sup-department").value,
+        biz_no: document.getElementById("sup-biz-no").value,
+        address: document.getElementById("sup-address").value,
+        manager: document.getElementById("sup-manager").value,
+        tel: document.getElementById("sup-tel").value
+      };
+
+      try {
+        const res = await fetch("/api/supplier", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        alert(data.message || "저장되었습니다.");
+        await loadMeta();
+      } catch (err) {
+        alert("저장 실패: " + err.message);
+      }
+    }
+
+    // ========================================================
+    // 협력업체(매장) 관리 함수
+    // ========================================================
+    let currentEditStoreOriginalName = "";
+
+    async function loadStoresList() {
+      const tbody = document.getElementById("stores-table-body");
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-[#887a66]">협력업체 목록을 불러오는 중...</td></tr>';
+      try {
+        const res = await fetch('/api/stores');
+        const stores = await res.json();
+        if (stores.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-[#887a66]">등록된 매장이 없습니다.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = stores.map((s, idx) => {
+          const storeSafeStr = JSON.stringify(s).replace(/"/g, '&quot;');
+          return `
+            <tr class="hover:bg-[#fbf7ee] transition">
+              <td class="py-3 px-4 text-center text-[#9c8e7c] font-bold">${idx + 1}</td>
+              <td class="py-3 px-4 font-bold text-[#26211a]">${s.name}</td>
+              <td class="py-3 px-4 text-[#6e6353] text-xs">${s.address || '-'}</td>
+              <td class="py-3 px-4 text-[#42382b] text-xs font-semibold">${s.menu || '-'}</td>
+              <td class="py-3 px-4 text-right font-bold text-[#2d5a43]">${s.price ? Number(s.price).toLocaleString() + '원' : '-'}</td>
+              <td class="py-3 px-4 text-center">
+                <button onclick='openStoreModal(${storeSafeStr})' class="px-3 py-1 bg-[#fbf7ee] hover:bg-[#efe6d6] border border-[#ded2bc] text-[#3d3326] rounded-xl text-xs font-bold shadow-xs transition active:scale-95">
+                  수정
+                </button>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-red-500">조회 실패: ${err.message}</td></tr>`;
+      }
+    }
+
+    function openStoreModal(s = null) {
+      if (s) {
+        currentEditStoreOriginalName = s.name;
+        document.getElementById("modal-store-name").value = s.name || "";
+        document.getElementById("modal-store-addr").value = s.address || "";
+        document.getElementById("modal-store-menu").value = s.menu || "";
+        document.getElementById("modal-store-price").value = s.price || "";
+      } else {
+        currentEditStoreOriginalName = "";
+        document.getElementById("modal-store-name").value = "";
+        document.getElementById("modal-store-addr").value = "";
+        document.getElementById("modal-store-menu").value = "";
+        document.getElementById("modal-store-price").value = "";
+      }
+      document.getElementById("store-modal").classList.remove("hidden");
+    }
+
+    function closeStoreModal() {
+      document.getElementById("store-modal").classList.add("hidden");
+    }
+
+    async function saveStoreItem(e) {
+      e.preventDefault();
+      const name = document.getElementById("modal-store-name").value.trim();
+      const address = document.getElementById("modal-store-addr").value.trim();
+      const menu = document.getElementById("modal-store-menu").value.trim();
+      const price = document.getElementById("modal-store-price").value.trim();
+
+      if (!name) {
+        alert("매장명을 입력해주세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/stores", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            original_name: currentEditStoreOriginalName,
+            name,
+            address,
+            menu,
+            price
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "매장 저장 중 오류가 발생했습니다.");
+          return;
+        }
+        alert(data.message || "매장이 성공적으로 저장되었습니다.");
+        closeStoreModal();
+        await loadMeta();
+        loadStoresList();
+      } catch (err) {
+        alert("서버 통신 오류: " + err.message);
+      }
+    }
+
+    // ========================================================
+    // 작물/품목 및 기본 단가 관리 함수
+    // ========================================================
+    let currentEditCropOriginalName = "";
+
+    async function loadCropsList() {
+      const tbody = document.getElementById("crops-table-body");
+      if (!tbody) return;
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-[#887a66]">작물 품목 목록을 불러오는 중...</td></tr>';
+      try {
+        const res = await fetch('/api/crops');
+        if (!res.ok) {
+          throw new Error(`서버 응답 오류 (${res.status})`);
+        }
+        const crops = await res.json();
+        if (!Array.isArray(crops)) {
+          throw new Error(crops.detail || "데이터 형식 오류");
+        }
+        if (crops.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-[#887a66]">등록된 작물이 없습니다.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = crops.map((c, idx) => {
+          const cropSafeStr = JSON.stringify(c).replace(/"/g, '&quot;');
+          const p = Number(c.unit_price) || 0;
+          const p100 = Math.round(p * 100);
+          const p1k = Math.round(p * 1000);
+          return `
+            <tr class="hover:bg-[#fbf7ee] transition">
+              <td class="py-3 px-4 text-center text-[#9c8e7c] font-bold">${idx + 1}</td>
+              <td class="py-3 px-4 font-bold text-[#26211a]">${c.name}</td>
+              <td class="py-3 px-4 text-center">
+                <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[#eef7f0] text-[#1e613b] border border-[#cbe5d2]">${c.category || '채소류'}</span>
+              </td>
+              <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${p.toLocaleString()}원 <span class="text-xs font-normal text-[#887a66]">/g</span></td>
+              <td class="py-3 px-4 text-right font-semibold text-[#42382b]">${p100.toLocaleString()}원</td>
+              <td class="py-3 px-4 text-right font-semibold text-[#42382b]">${p1k.toLocaleString()}원</td>
+              <td class="py-3 px-4 text-xs text-[#6e6353]">${c.remarks || '-'}</td>
+              <td class="py-3 px-4 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick='openCropModal(${cropSafeStr})' class="px-2.5 py-1 bg-[#eef6f1] hover:bg-[#dcefe3] border border-[#c4e3d0] text-[#245f3c] rounded-xl text-xs font-bold shadow-xs transition active:scale-95">
+                    수정
+                  </button>
+                  <button onclick="deleteCropItem('${c.name}')" class="px-2.5 py-1 bg-[#fdf2f0] hover:bg-[#fde4e0] border border-[#f7c9c0] text-[#c54530] rounded-xl text-xs font-bold shadow-xs transition active:scale-95">
+                    삭제
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join('');
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-red-500">조회 실패: ${err.message}</td></tr>`;
+      }
+    }
+
+    function openCropModal(c = null) {
+      if (c) {
+        currentEditCropOriginalName = c.name;
+        document.getElementById("crop-modal-title").innerHTML = '<i class="fa-solid fa-leaf text-[#3d7a5a]"></i> <span>작물 품목 및 단가 수정</span>';
+        document.getElementById("modal-crop-name").value = c.name || "";
+        document.getElementById("modal-crop-price").value = c.unit_price ?? "";
+        document.getElementById("modal-crop-category").value = c.category || "허브류";
+        document.getElementById("modal-crop-remarks").value = c.remarks || "";
+        previewCropPrice(c.unit_price);
+      } else {
+        currentEditCropOriginalName = "";
+        document.getElementById("crop-modal-title").innerHTML = '<i class="fa-solid fa-leaf text-[#3d7a5a]"></i> <span>신규 작물 품목 등록</span>';
+        document.getElementById("modal-crop-name").value = "";
+        document.getElementById("modal-crop-price").value = "";
+        document.getElementById("modal-crop-category").value = "허브류";
+        document.getElementById("modal-crop-remarks").value = "";
+        previewCropPrice(0);
+      }
+      document.getElementById("crop-modal").classList.remove("hidden");
+    }
+
+    function closeCropModal() {
+      document.getElementById("crop-modal").classList.add("hidden");
+    }
+
+    function previewCropPrice(val) {
+      const p = parseFloat(val) || 0;
+      const p100 = Math.round(p * 100);
+      const p1k = Math.round(p * 1000);
+      const el = document.getElementById("modal-crop-price-preview");
+      if (el) {
+        el.textContent = `100g 환산가: ${p100.toLocaleString()}원 | 1kg 환산가: ${p1k.toLocaleString()}원`;
+      }
+    }
+
+    async function saveCropItem(e) {
+      e.preventDefault();
+      const name = document.getElementById("modal-crop-name").value.trim();
+      const unit_price = parseFloat(document.getElementById("modal-crop-price").value);
+      const category = document.getElementById("modal-crop-category").value;
+      const remarks = document.getElementById("modal-crop-remarks").value.trim();
+
+      if (!name) {
+        alert("작물명을 입력해주세요.");
+        return;
+      }
+      if (isNaN(unit_price) || unit_price < 0) {
+        alert("올바른 단가(0원 이상)를 입력해주세요.");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/crops", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            original_name: currentEditCropOriginalName,
+            name,
+            unit_price,
+            category,
+            remarks
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "작물 저장 중 오류가 발생했습니다.");
+          return;
+        }
+        alert(data.message || "작물이 성공적으로 저장되었습니다.");
+        closeCropModal();
+        await loadMeta();
+        loadCropsList();
+      } catch (err) {
+        alert("서버 통신 오류: " + err.message);
+      }
+    }
+
+    async function deleteCropItem(cropName) {
+      if (!confirm(`'${cropName}' 작물을 목록에서 삭제하시겠습니까?\n기존 대장에 기록된 과거 내역은 유지되며, 신규 선택 목록에서 제외됩니다.`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/crops/${encodeURIComponent(cropName)}`, {
+          method: "DELETE"
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "삭제 중 오류가 발생했습니다.");
+          return;
+        }
+        alert(data.message || "삭제되었습니다.");
+        await loadMeta();
+        loadCropsList();
+      } catch (err) {
+        alert("삭제 통신 오류: " + err.message);
+      }
+    }
+
+    // ========================================================
+    // 업체별 결재내역(정산서) 함수
+    // ========================================================
+    let currentSettlementData = null;
+
+    function onSettleMonthChange() {
+      document.getElementById("settle-start-date").value = "";
+      document.getElementById("settle-end-date").value = "";
+      loadStoreSettlement();
+    }
+
+    function onSettleDateChange() {
+      document.getElementById("settle-month-select").value = "";
+    }
+
+    async function loadStoreSettlement() {
+      const storeName = document.getElementById("settle-store-select").value;
+      const monthVal = document.getElementById("settle-month-select").value;
+      const startDate = document.getElementById("settle-start-date").value;
+      const endDate = document.getElementById("settle-end-date").value;
+      const tbody = document.getElementById("settle-table-body");
+
+      if (!storeName) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">상단에서 매장을 먼저 선택해주세요.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">결재 내역을 불러오는 중...</td></tr>';
+
+      try {
+        let url = `/api/settlement?store_name=${encodeURIComponent(storeName)}`;
+        if (startDate || endDate) {
+          if (startDate) url += `&start_date=${startDate}`;
+          if (endDate) url += `&end_date=${endDate}`;
+        } else if (monthVal) {
+          url += `&year_month=${encodeURIComponent(monthVal)}`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-red-500">데이터를 불러오지 못했습니다.</td></tr>';
+          return;
+        }
+
+        const data = await res.json();
+        currentSettlementData = data;
+
+        document.getElementById("settle-summary-count").textContent = `${data.total_count}건`;
+        document.getElementById("settle-summary-qty").textContent = `${data.formatted_total_qty} g`;
+        document.getElementById("settle-summary-amount").textContent = `${data.formatted_total_amount} 원`;
+
+        if (!data.items || data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-slate-400">해당 기간의 납품 내역이 없습니다.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.items.map((it, idx) => `
+          <tr class="hover:bg-[#fbf7ee] transition">
+            <td class="py-3 px-3 text-center text-[#9c8e7c] text-xs font-bold">${idx + 1}</td>
+            <td class="py-3 px-4 font-semibold text-[#42382b]">${it.order_date}</td>
+            <td class="py-3 px-4 font-bold text-[#26211a]">${it.crop}</td>
+            <td class="py-3 px-4 text-right font-medium text-[#6e6353]">${Number(it.unit_price).toLocaleString()}원</td>
+            <td class="py-3 px-4 text-right font-bold text-[#42382b]">${Number(it.qty).toLocaleString()}g</td>
+            <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${Number(it.amount).toLocaleString()}원</td>
+            <td class="py-3 px-4 text-xs text-[#7a6f5d]">${it.delivery_date || it.order_date}</td>
+            <td class="py-3 px-4 text-xs text-[#7a6f5d]">${it.remarks || '-'}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-red-500">조회 실패: ${err.message}</td></tr>`;
+      }
+    }
+
+    function generateStoreSettlementHTML(data) {
+      const sup = data.supplier || {};
+      let itemsRows = "";
+      (data.items || []).forEach((it, idx) => {
+        itemsRows += `
+          <tr style="height: 24px;">
+            <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">${idx + 1}</td>
+            <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">${it.order_date}</td>
+            <td style="border: 1px solid #333; padding-left: 8px; font-weight: bold; white-space: nowrap;">${it.crop}</td>
+            <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap;">${Number(it.unit_price).toLocaleString()}</td>
+            <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap;">${Number(it.qty).toLocaleString()}g</td>
+            <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-weight: bold; white-space: nowrap;">₩ ${Number(it.amount).toLocaleString()}</td>
+            <td style="border: 1px solid #333; text-align: center; font-size: 10px; white-space: nowrap;">${it.delivery_date || it.order_date}</td>
+            <td style="border: 1px solid #333; padding-left: 6px; font-size: 10px;">${it.remarks || ''}</td>
+          </tr>
+        `;
+      });
+
+      return `
+        <div style="font-family: 'Pretendard', sans-serif; color: #000; padding: 16px; background: #fff;">
+          <!-- 상단 헤더 & 로고 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="/static/gangbuk_logo.png" onerror="this.src='https://www.gangbuk.go.kr/static/images/portal/ns_logo1.png'" alt="강북구" style="height: 32px; object-fit: contain;">
+              <div>
+                <div style="font-size: 11px; font-weight: bold; color: #059669; white-space: nowrap;">강북형 스마트팜 상생협력</div>
+                <div style="font-size: 9px; color: #666; white-space: nowrap;">4.19로 로컬푸드 활성화 사업</div>
+              </div>
+            </div>
+            <div style="text-align: center;">
+              <h1 style="font-size: 22px; font-weight: 900; letter-spacing: 4px; margin: 0; white-space: nowrap;">스마트팜 납품 정산서</h1>
+              <div style="font-size: 11px; color: #555; margin-top: 2px; white-space: nowrap;">( 업 체 별  결 재 내 역 서 )</div>
+            </div>
+            <div style="text-align: right; font-size: 10px; color: #444; white-space: nowrap;">
+              <div>정산대상월: <b>${data.year_month}</b></div>
+              <div>출력일시: ${new Date().toLocaleDateString('ko-KR')}</div>
+            </div>
+          </div>
+
+          <!-- 정보 요약 2단 표 -->
+          <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+            <!-- 좌측: 공급받는 자 (매장) -->
+            <div style="flex: 1; border: 1px solid #333;">
+              <div style="background: #f1f5f9; text-align: center; font-weight: bold; font-size: 11px; padding: 3px; border-bottom: 1px solid #333; white-space: nowrap;">공급받는 자 (협력매장)</div>
+              <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 70px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ddd; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">매 장 명</td>
+                  <td style="border-bottom: 1px solid #ddd; padding: 4px 8px; font-weight: bold; font-size: 12px; white-space: nowrap;">${data.store_name}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ddd; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">소 재 지</td>
+                  <td style="border-bottom: 1px solid #ddd; padding: 4px 8px; font-size: 10px;">${data.store_address || '서울특별시 강북구 4.19로'}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">정산기간</td>
+                  <td style="padding: 4px 8px; white-space: nowrap;">${data.year_month} (${data.total_count}건 납품)</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- 우측: 공급자 (강북구청) -->
+            <div style="flex: 1.1; border: 1px solid #333;">
+              <div style="background: #f1f5f9; text-align: center; font-weight: bold; font-size: 11px; padding: 3px; border-bottom: 1px solid #333; white-space: nowrap;">공 급 자 (스마트팜 사업단)</div>
+              <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 70px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ddd; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">기 관 명</td>
+                  <td style="border-bottom: 1px solid #ddd; padding: 4px 8px; font-weight: bold; white-space: nowrap;">${sup.name || '강북구청'} (${sup.department || '스마트팜'})</td>
+                </tr>
+                <tr>
+                  <td style="width: 70px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ddd; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">고유번호</td>
+                  <td style="border-bottom: 1px solid #ddd; padding: 4px 8px; white-space: nowrap;">${sup.biz_no || '109-83-00109'}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">소 재 지</td>
+                  <td style="padding: 4px 8px; font-size: 10px; white-space: nowrap;">${sup.address || '서울시 강북구 덕릉로 138'}</td>
+                </tr>
+              </table>
+            </div>
+          </div>
+
+          <!-- 납품 내역 표 -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 10px; font-size: 11px;">
+            <thead>
+              <tr style="background: #f1f5f9; height: 26px;">
+                <th style="border: 1px solid #333; width: 35px; text-align: center; white-space: nowrap;">No</th>
+                <th style="border: 1px solid #333; width: 85px; text-align: center; white-space: nowrap;">주문일자</th>
+                <th style="border: 1px solid #333; min-width: 110px; text-align: center; white-space: nowrap;">품목명</th>
+                <th style="border: 1px solid #333; width: 65px; text-align: center; white-space: nowrap;">단가(원)</th>
+                <th style="border: 1px solid #333; width: 75px; text-align: center; white-space: nowrap;">수량(g)</th>
+                <th style="border: 1px solid #333; width: 90px; text-align: center; white-space: nowrap;">금액(원)</th>
+                <th style="border: 1px solid #333; width: 85px; text-align: center; white-space: nowrap;">배송일자</th>
+                <th style="border: 1px solid #333; min-width: 90px; text-align: center; white-space: nowrap;">비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsRows || '<tr><td colspan="8" style="text-align: center; padding: 16px; border: 1px solid #333;">납품 내역이 없습니다.</td></tr>'}
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8fafc; height: 28px; font-weight: bold;">
+                <td colspan="4" style="border: 1px solid #333; text-align: center;">총 계 (${data.total_count}건)</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 8px;">${data.formatted_total_qty} g</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-size: 12px; color: #000;">₩ ${data.formatted_total_amount}</td>
+                <td colspan="2" style="border: 1px solid #333;"></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- 결재 및 합계금액 명시 -->
+          <div style="border: 2px solid #000; padding: 8px 12px; margin-bottom: 14px; background: #fafafa; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <span style="font-size: 11px; color: #444;">총 결재 금액 :</span>
+              <span style="font-size: 14px; font-weight: 900; margin-left: 8px;">일금 ${data.korean_amount} (₩ ${data.formatted_total_amount})</span>
+            </div>
+            <div style="font-size: 10px; color: #555;">(부가가치세 면세품목 포함)</div>
+          </div>
+
+          <!-- 서명 및 결재란 -->
+          <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid #333; padding: 12px 16px; font-size: 11px; background: #fff;">
+            <div>
+              <p style="margin: 0; font-weight: 500;">위와 같이 스마트팜 로컬푸드 농작물을 정히 공급 및 정산하였음을 확인합니다.</p>
+              <p style="margin: 4px 0 0 0; color: #666; font-size: 10px;">${new Date().toLocaleDateString('ko-KR')} 강북구 스마트팜 로컬푸드 관리시스템</p>
+            </div>
+            <div style="display: flex; gap: 20px;">
+              <div style="text-align: right;">
+                <span>공급자(확인자): <b>${sup.manager || '박기남'}</b> &nbsp;&nbsp;(인)</span>
+              </div>
+              <div style="text-align: right;">
+                <span>공급받는자(대표): &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(서명)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function printStoreSettlement() {
+      if (!currentSettlementData || !currentSettlementData.items || currentSettlementData.items.length === 0) {
+        await loadStoreSettlement();
+      }
+      if (!currentSettlementData || !currentSettlementData.items || currentSettlementData.items.length === 0) {
+        alert("인쇄할 결재 내역이 없습니다. 매장과 기간을 확인해주세요.");
+        return;
+      }
+      const fullHTML = generateStoreSettlementHTML(currentSettlementData);
+      document.getElementById("modal-preview-content").innerHTML = fullHTML;
+      document.getElementById("receipt-container").innerHTML = fullHTML;
+      document.getElementById("preview-modal").classList.remove("hidden");
+    }
+
+    // ========================================================
+    // 월별/기간별 총괄 정산 및 집계표 함수
+    // ========================================================
+    let currentMonthlySummaryData = null;
+
+    function onSummaryMonthChange() {
+      document.getElementById("summary-start-date").value = "";
+      document.getElementById("summary-end-date").value = "";
+      loadMonthlySummary();
+    }
+
+    function onSummaryDateChange() {
+      document.getElementById("monthly-summary-select").value = "";
+    }
+
+    async function loadMonthlySummary() {
+      const monthVal = document.getElementById("monthly-summary-select").value;
+      const startDate = document.getElementById("summary-start-date").value;
+      const endDate = document.getElementById("summary-end-date").value;
+      const tbody = document.getElementById("monthly-table-body");
+
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">총괄 집계 데이터를 계산 중...</td></tr>';
+
+      try {
+        let url = `/api/monthly-summary?`;
+        if (startDate || endDate) {
+          if (startDate) url += `start_date=${startDate}&`;
+          if (endDate) url += `end_date=${endDate}&`;
+        } else if (monthVal) {
+          url += `year_month=${encodeURIComponent(monthVal)}&`;
+        }
+
+        const res = await fetch(url);
+        if (!res.ok) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-red-500">집계 데이터를 가져오지 못했습니다.</td></tr>';
+          return;
+        }
+
+        const data = await res.json();
+        currentMonthlySummaryData = data;
+
+        document.getElementById("monthly-total-stores").textContent = `${data.store_count}개소`;
+        document.getElementById("monthly-total-orders").textContent = `${data.grand_total_orders}건`;
+        document.getElementById("monthly-total-qty").textContent = `${data.formatted_grand_total_qty} g`;
+        document.getElementById("monthly-total-amount").textContent = `${data.formatted_grand_total_amount} 원`;
+
+        if (!data.stores || data.stores.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="text-center py-8 text-slate-400">해당 월에 등록된 납품 실적이 없습니다.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = data.stores.map((st, idx) => `
+          <tr class="hover:bg-[#fbf7ee] transition">
+            <td class="py-3 px-3 text-center text-[#9c8e7c] text-xs font-bold">${idx + 1}</td>
+            <td class="py-3 px-4 font-bold text-[#26211a]">${st.store_name}</td>
+            <td class="py-3 px-4 text-center font-semibold text-[#42382b]">${st.order_count}회</td>
+            <td class="py-3 px-4 text-right font-bold text-[#42382b]">${st.formatted_total_qty}g</td>
+            <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${st.formatted_total_amount}원</td>
+            <td class="py-3 px-4 text-xs text-[#6e6353]">${st.crops_summary || '-'}</td>
+          </tr>
+        `).join('');
+
+      } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-red-500">조회 실패: ${err.message}</td></tr>`;
+      }
+    }
+
+    function generateMonthlySummaryHTML(data) {
+      const sup = data.supplier || {};
+      let storeRows = "";
+      (data.stores || []).forEach((st, idx) => {
+        storeRows += `
+          <tr style="height: 24px;">
+            <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">${idx + 1}</td>
+            <td style="border: 1px solid #333; padding-left: 8px; font-weight: bold; white-space: nowrap;">${st.store_name}</td>
+            <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">${st.order_count}회</td>
+            <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap;">${st.formatted_total_qty} g</td>
+            <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-weight: bold; white-space: nowrap;">₩ ${st.formatted_total_amount}</td>
+            <td style="border: 1px solid #333; padding-left: 6px; font-size: 10px;">${st.crops_summary || '-'}</td>
+          </tr>
+        `;
+      });
+
+      return `
+        <div style="font-family: 'Pretendard', sans-serif; color: #000; padding: 16px; background: #fff;">
+          <!-- 결재란 포함 헤더 -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <img src="/static/gangbuk_logo.png" onerror="this.src='https://www.gangbuk.go.kr/static/images/portal/ns_logo1.png'" alt="강북구" style="height: 30px; object-fit: contain;">
+                <span style="font-size: 12px; font-weight: bold; color: #059669; white-space: nowrap;">서울특별시 강북구 스마트팜</span>
+              </div>
+              <h1 style="font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 2px 0 0 0; white-space: nowrap;">월간 납품 및 정산 총괄 집계표</h1>
+              <div style="font-size: 11px; color: #444; margin-top: 2px; white-space: nowrap;">대상 기간: <b>${data.year_month}</b> | 로컬푸드 활성화 상생지원</div>
+            </div>
+
+            <!-- 결재 도장 직인란 (담당 - 팀장 - 과장) -->
+            <table style="border-collapse: collapse; font-size: 10px; text-align: center; width: 210px;">
+              <tr style="height: 18px; background: #f1f5f9;">
+                <th rowspan="2" style="border: 1px solid #333; width: 22px; padding: 2px; writing-mode: vertical-rl;">결 재</th>
+                <th style="border: 1px solid #333; width: 60px;">담 당</th>
+                <th style="border: 1px solid #333; width: 60px;">팀 장</th>
+                <th style="border: 1px solid #333; width: 60px;">과 장</th>
+              </tr>
+              <tr style="height: 48px;">
+                <td style="border: 1px solid #333; vertical-align: bottom; padding-bottom: 3px;">(인)</td>
+                <td style="border: 1px solid #333; vertical-align: bottom; padding-bottom: 3px;">(인)</td>
+                <td style="border: 1px solid #333; vertical-align: bottom; padding-bottom: 3px;">(인)</td>
+              </tr>
+            </table>
+          </div>
+
+          <!-- 월간 핵심 지표 요약 -->
+          <div style="display: flex; gap: 8px; margin-bottom: 12px; text-align: center;">
+            <div style="flex: 1; border: 1px solid #333; padding: 6px; background: #fafafa;">
+              <div style="font-size: 10px; color: #666; white-space: nowrap;">협력 매장수</div>
+              <div style="font-size: 14px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.store_count} 개소</div>
+            </div>
+            <div style="flex: 1; border: 1px solid #333; padding: 6px; background: #fafafa;">
+              <div style="font-size: 10px; color: #666; white-space: nowrap;">총 납품 건수</div>
+              <div style="font-size: 14px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.grand_total_orders} 건</div>
+            </div>
+            <div style="flex: 1; border: 1px solid #333; padding: 6px; background: #fafafa;">
+              <div style="font-size: 10px; color: #666; white-space: nowrap;">총 공급 중량</div>
+              <div style="font-size: 14px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.formatted_grand_total_qty} g</div>
+            </div>
+            <div style="flex: 1.5; border: 1px solid #333; padding: 6px; background: #f0fdf4;">
+              <div style="font-size: 10px; color: #166534; white-space: nowrap;">총 공급 가액 (합계)</div>
+              <div style="font-size: 15px; font-weight: 900; color: #047857; margin-top: 2px; white-space: nowrap;">₩ ${data.formatted_grand_total_amount}</div>
+            </div>
+          </div>
+
+          <!-- 매장별 집계 테이블 -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 11px;">
+            <thead>
+              <tr style="background: #f1f5f9; height: 26px;">
+                <th style="border: 1px solid #333; width: 35px; text-align: center; white-space: nowrap;">No</th>
+                <th style="border: 1px solid #333; width: 140px; text-align: center; white-space: nowrap;">협력 매장명</th>
+                <th style="border: 1px solid #333; width: 75px; text-align: center; white-space: nowrap;">납품횟수</th>
+                <th style="border: 1px solid #333; width: 95px; text-align: center; white-space: nowrap;">공급량(g)</th>
+                <th style="border: 1px solid #333; width: 110px; text-align: center; white-space: nowrap;">공급가액(원)</th>
+                <th style="border: 1px solid #333; text-align: center; white-space: nowrap;">주요 납품 작물 및 세부 비고</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${storeRows || '<tr><td colspan="6" style="text-align: center; padding: 16px; border: 1px solid #333;">해당 기간의 납품 실적이 없습니다.</td></tr>'}
+            </tbody>
+            <tfoot>
+              <tr style="background: #f8fafc; height: 28px; font-weight: 900;">
+                <td colspan="2" style="border: 1px solid #333; text-align: center;">총 합 계</td>
+                <td style="border: 1px solid #333; text-align: center;">${data.grand_total_orders} 건</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 8px;">${data.formatted_grand_total_qty} g</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-size: 12px;">₩ ${data.formatted_grand_total_amount}</td>
+                <td style="border: 1px solid #333; padding-left: 8px; font-size: 10px;">일금 ${data.korean_amount}</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- 하단 공문 확인 및 결재 서명 -->
+          <div style="border: 1px solid #333; padding: 12px; background: #fff; text-align: center;">
+            <p style="margin: 0; font-size: 12px; font-weight: bold; letter-spacing: 1px;">위와 같이 강북구 스마트팜 로컬푸드 지원사업의 월간 납품 및 공급 실적을 총괄 보고합니다.</p>
+            <p style="margin: 8px 0; font-size: 11px; color: #444;">${new Date().toLocaleDateString('ko-KR')}</p>
+            <div style="margin-top: 6px; font-size: 13px; font-weight: bold; display: flex; justify-content: center; align-items: center;">
+              <span>서울특별시 강북구청 스마트팜 로컬푸드 담당자 (인)</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function printMonthlySummary() {
+      if (!currentMonthlySummaryData || !currentMonthlySummaryData.stores || currentMonthlySummaryData.stores.length === 0) {
+        await loadMonthlySummary();
+      }
+      if (!currentMonthlySummaryData || !currentMonthlySummaryData.stores || currentMonthlySummaryData.stores.length === 0) {
+        alert("인쇄할 집계 실적이 없습니다. 월을 확인해주세요.");
+        return;
+      }
+      const fullHTML = generateMonthlySummaryHTML(currentMonthlySummaryData);
+      document.getElementById("modal-preview-content").innerHTML = fullHTML;
+      document.getElementById("receipt-container").innerHTML = fullHTML;
+      document.getElementById("preview-modal").classList.remove("hidden");
+    }
+
+    // ========================================================
+    // 최신 엑셀 업로드 및 교체 함수
+    // ========================================================
+    async function handleExcelUpload() {
+      const fileInput = document.getElementById("excel-file-input");
+      if (!fileInput.files || fileInput.files.length === 0) {
+        alert("업로드할 최신 엑셀(.xlsx) 파일을 선택해주세요.");
+        return;
+      }
+      const file = fileInput.files[0];
+      if (!file.name.endsWith(".xlsx")) {
+        alert(".xlsx 형식의 엑셀 파일만 업로드할 수 있습니다.");
+        return;
+      }
+
+      if (!confirm(`'${file.name}' 파일을 최신 납품대장으로 적용하시겠습니까?\n기존 파일은 backups 폴더에 안전하게 자동 백업됩니다.`)) {
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      try {
+        const res = await fetch("/api/upload-excel", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "엑셀 파일 업로드에 실패했습니다.");
+          return;
+        }
+        alert(data.message || "최신 엑셀 파일이 성공적으로 적용되었습니다!");
+        fileInput.value = "";
+        await loadMeta();
+        if (!document.getElementById("view-history").classList.contains("hidden")) loadOrdersHistory();
+        if (!document.getElementById("view-stores").classList.contains("hidden")) loadStoresList();
+        if (!document.getElementById("view-settlement").classList.contains("hidden")) loadStoreSettlement();
+        if (!document.getElementById("view-summary").classList.contains("hidden")) loadMonthlySummary();
+      } catch (err) {
+        alert("업로드 통신 오류: " + err.message);
+      }
+    }
+
+    // ========================================================
+    // 납품확인서(거래명세표) 렌더링 함수
+    // ========================================================
+    function generateReceiptHTML(data, isSupplierCopy = true) {
+      const copyTitle = isSupplierCopy ? "공급자 보관용" : "공급받는자 보관용";
+      const sup = data.supplier || {};
+      
+      // 테이블 행 생성 (최소 4행 채우기)
+      let rowsHTML = "";
+      const maxRows = Math.max(data.items.length, 3);
+      for (let i = 0; i < maxRows; i++) {
+        if (i < data.items.length) {
+          const it = data.items[i];
+          rowsHTML += `
+            <tr style="height: 22px;">
+              <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">${i + 1}</td>
+              <td style="border: 1px solid #333; padding-left: 6px; font-weight: bold; white-space: nowrap;">${it.crop}</td>
+              <td style="border: 1px solid #333; text-align: right; padding-right: 6px; white-space: nowrap;">${it.qty.toLocaleString()}g</td>
+              <td style="border: 1px solid #333; text-align: right; padding-right: 6px; white-space: nowrap;">${it.unit_price}</td>
+              <td style="border: 1px solid #333; text-align: right; padding-right: 6px; font-weight: bold; white-space: nowrap;">${Math.round(it.amount).toLocaleString()}</td>
+              <td style="border: 1px solid #333; padding-left: 6px; font-size: 10px;">${it.remarks || ''}</td>
+            </tr>
+          `;
+        } else {
+          rowsHTML += `
+            <tr style="height: 22px;">
+              <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">${i + 1}</td>
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+              <td style="border: 1px solid #333;"></td>
+            </tr>
+          `;
+        }
+      }
+
+      return `
+        <div style="border: 2px solid #000; padding: 12px; margin-bottom: 8px; background-color: #fff; font-family: 'Pretendard', sans-serif;">
+          
+          <!-- 상단 헤더 -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 8px; border-bottom: 2px solid #000; padding-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <img src="/static/gangbuk_logo.png" onerror="this.src='https://www.gangbuk.go.kr/static/images/portal/ns_logo1.png'" alt="강북구" style="height: 26px; object-fit: contain;">
+              <div>
+                <span style="font-size: 9px; border: 1px solid #666; padding: 1px 4px; font-weight: bold; border-radius: 2px; white-space: nowrap;">${copyTitle}</span>
+                <div style="font-size: 9px; color: #444; margin-top: 3px; white-space: nowrap;">발행일자: <b>${data.order_date}</b></div>
+              </div>
+            </div>
+            <div style="font-size: 20px; font-weight: 900; letter-spacing: 4px; text-align: center; white-space: nowrap;">
+              납 품 확 인 서
+              <div style="font-size: 10px; font-weight: normal; letter-spacing: 1px; color: #444; margin-top: 1px; white-space: nowrap;">( 거 래 명 세 표 )</div>
+            </div>
+            <div style="text-align: right; font-size: 9px; color: #444; white-space: nowrap;">
+              관리번호: ${data.order_key.replace('___', '-')}
+            </div>
+          </div>
+
+          <!-- 공급받는자 / 공급자 2단 표 -->
+          <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+            
+            <!-- 좌측: 공급받는자 정보 -->
+            <div style="flex: 1; border: 1px solid #333;">
+              <div style="background: #f1f5f9; text-align: center; font-weight: bold; font-size: 10px; padding: 2px; border-bottom: 1px solid #333; white-space: nowrap;">공급받는 자 (납품처)</div>
+              <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 55px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">업 소 명</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 3px 6px; font-size: 12px; font-weight: bold; white-space: nowrap;">${data.store_name}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">소 재 지</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 3px 6px; font-size: 9px; white-space: nowrap;">${data.address || '서울특별시 강북구 4.19로 인근'}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">주문일자</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 3px 6px; white-space: nowrap;">${data.order_date}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">납품일시</td>
+                  <td style="padding: 3px 6px; white-space: nowrap;">${data.delivery_date || data.order_date}</td>
+                </tr>
+              </table>
+            </div>
+
+            <!-- 우측: 공급자 정보 (강북구청) -->
+            <div style="flex: 1.1; border: 1px solid #333; position: relative;">
+              <div style="background: #f1f5f9; text-align: center; font-weight: bold; font-size: 10px; padding: 2px; border-bottom: 1px solid #333; white-space: nowrap;">공 급 자 (납품업체)</div>
+              <table style="width: 100%; font-size: 10px; border-collapse: collapse;">
+                <tr>
+                  <td style="width: 55px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">기관/상호</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 3px 6px; font-weight: bold; white-space: nowrap;">${sup.name || '강북구청'} <span style="font-size: 9px; font-weight: normal; color: #555;">(${sup.department || '스마트팜'})</span></td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">등록번호</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 3px 6px; white-space: nowrap;">${sup.biz_no || '109-83-00109'}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">소 재 지</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 3px 6px; font-size: 9px; white-space: nowrap;">${sup.address || '서울시 강북구 도봉로 89'}</td>
+                </tr>
+                <tr>
+                  <td style="background: #f8fafc; border-right: 1px solid #333; padding: 3px; font-weight: bold; text-align: center; white-space: nowrap;">연 락 처</td>
+                  <td style="padding: 3px 6px; white-space: nowrap;">${sup.tel || '02-901-7256'}</td>
+                </tr>
+              </table>
+            </div>
+
+          </div>
+
+          <!-- 품목 상세 테이블 -->
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 6px; font-size: 10px;">
+            <thead>
+              <tr style="background: #f1f5f9; height: 22px;">
+                <th style="border: 1px solid #333; width: 30px; text-align: center; white-space: nowrap;">No</th>
+                <th style="border: 1px solid #333; text-align: center; white-space: nowrap;">품 목 명</th>
+                <th style="border: 1px solid #333; width: 65px; text-align: center; white-space: nowrap;">수량(g)</th>
+                <th style="border: 1px solid #333; width: 55px; text-align: center; white-space: nowrap;">단가(원)</th>
+                <th style="border: 1px solid #333; width: 75px; text-align: center; white-space: nowrap;">금액(원)</th>
+                <th style="border: 1px solid #333; width: 95px; text-align: center; white-space: nowrap;">비 고</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHTML}
+            </tbody>
+            <tfoot>
+              <tr style="background: #fafafa; height: 24px; font-weight: bold;">
+                <td colspan="2" style="border: 1px solid #333; text-align: center; white-space: nowrap;">합 계</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 6px; white-space: nowrap;">${data.formatted_total_qty}g</td>
+                <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">총 공급액</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 6px; font-size: 11px; color: #000; white-space: nowrap;">₩ ${data.formatted_total_amount}</td>
+                <td style="border: 1px solid #333;"></td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <!-- 금액 한글 표기 및 수령 확인 서명란 -->
+          <div style="border: 1px solid #333; padding: 6px 10px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+            <div>
+              <span style="font-size: 9px; color: #555;">합계 금액:</span>
+              <span style="font-size: 11px; font-weight: 800; margin-left: 6px;">일금 ${data.korean_amount} (₩ ${data.formatted_total_amount})</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; font-size: 10px;">
+              <span>위 물품을 정히 영수(납품)함.</span>
+              <span style="border-bottom: 1px solid #000; width: 90px; text-align: right; display: inline-block; padding-bottom: 2px;">인수자 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(서명)</span>
+            </div>
+          </div>
+
+        </div>
+      `;
+    }
+
+    async function openReceiptModal(orderKey) {
+      try {
+        const res = await fetch(`/api/receipt/${encodeURIComponent(orderKey)}`);
+        if (!res.ok) {
+          alert("확인서 데이터를 가져오지 못했습니다.");
+          return;
+        }
+        const data = await res.json();
+
+        // 상단(공급자 보관용) + 절취선 + 하단(공급받는자 보관용)
+        const fullHTML = `
+          <!-- 1. 상단: 공급자 보관용 -->
+          ${generateReceiptHTML(data, true)}
+          
+          <!-- 중앙 절취선 -->
+          <div style="text-align: center; margin: 6px 0; color: #666; font-size: 9px; letter-spacing: 2px; border-top: 1px dashed #777; padding-top: 4px;">
+            ✂️ ------------------------------------ [ 절 취 선 ] ------------------------------------ ✂️
+          </div>
+
+          <!-- 2. 하단: 공급받는자 보관용 -->
+          ${generateReceiptHTML(data, false)}
+        `;
+
+        document.getElementById("modal-preview-content").innerHTML = fullHTML;
+        document.getElementById("receipt-container").innerHTML = fullHTML;
+        document.getElementById("preview-modal").classList.remove("hidden");
+
+      } catch (err) {
+        alert("확인서 로드 오류: " + err.message);
+      }
+    }
+
+    function closePreviewModal() {
+      document.getElementById("preview-modal").classList.add("hidden");
+    }
+
+    function triggerPrint() {
+      window.print();
+    }
+
+    // 스마트폰 접속 QR 모달 제어
+    let tunnelCheckTimer = null;
+
+    async function checkTunnelStatus() {
+      try {
+        const res = await fetch('/api/tunnel');
+        const data = await res.json();
+        if (data.active && data.url) {
+          document.getElementById("qr-loading").classList.add("hidden");
+          const qrImg = document.getElementById("qr-image");
+          qrImg.src = data.qr_image + '?t=' + new Date().getTime();
+          qrImg.classList.remove("hidden");
+          document.getElementById("tunnel-url-input").value = data.url;
+          return true;
+        }
+      } catch (e) {
+        console.error("터널 상태 확인 오류:", e);
+      }
+      return false;
+    }
+
+    async function openMobileQrModal() {
+      document.getElementById("qr-modal").classList.remove("hidden");
+      const ready = await checkTunnelStatus();
+      if (!ready) {
+        document.getElementById("qr-image").classList.add("hidden");
+        document.getElementById("qr-loading").classList.remove("hidden");
+        document.getElementById("tunnel-url-input").value = "주소 생성 중... 잠시만 기다려주세요";
+        if (tunnelCheckTimer) clearInterval(tunnelCheckTimer);
+        tunnelCheckTimer = setInterval(async () => {
+          const ok = await checkTunnelStatus();
+          if (ok) clearInterval(tunnelCheckTimer);
+        }, 2000);
+      }
+    }
+
+    function closeMobileQrModal() {
+      document.getElementById("qr-modal").classList.add("hidden");
+      if (tunnelCheckTimer) clearInterval(tunnelCheckTimer);
+    }
+
+    function copyTunnelUrl() {
+      const input = document.getElementById("tunnel-url-input");
+      if (!input.value || input.value.startsWith("주소 생성")) {
+        alert("아직 주소가 생성되지 않았습니다.");
+        return;
+      }
+      navigator.clipboard.writeText(input.value).then(() => {
+        alert("스마트폰 접속 주소가 복사되었습니다!\n카카오톡 등으로 전송해서 열어보세요:\n" + input.value);
+      }).catch(() => {
+        input.select();
+        document.execCommand("copy");
+        alert("주소가 복사되었습니다: " + input.value);
+      });
+    }
+  </script>
+</body>
+</html>
