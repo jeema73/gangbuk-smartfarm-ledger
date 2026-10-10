@@ -2602,10 +2602,20 @@
       try {
         const res = await fetch('/api/tunnel');
         const data = await res.json();
-        if (data.active && data.url) {
+        const currentUrl = data.url || window.location.origin;
+        if (currentUrl && !currentUrl.includes("127.0.0.1") && !currentUrl.includes("localhost")) {
           document.getElementById("qr-loading").classList.add("hidden");
           const qrImg = document.getElementById("qr-image");
-          qrImg.src = data.qr_image + '?t=' + new Date().getTime();
+          // 고화질 빠른 로딩 Google Chart QR API 연동 (스마트폰 즉시 인식)
+          const qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=" + encodeURIComponent(currentUrl);
+          qrImg.src = qrApiUrl;
+          qrImg.classList.remove("hidden");
+          document.getElementById("tunnel-url-input").value = currentUrl;
+          return true;
+        } else if (data.url) {
+          document.getElementById("qr-loading").classList.add("hidden");
+          const qrImg = document.getElementById("qr-image");
+          qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=" + encodeURIComponent(data.url);
           qrImg.classList.remove("hidden");
           document.getElementById("tunnel-url-input").value = data.url;
           return true;
@@ -2618,11 +2628,22 @@
 
     async function openMobileQrModal() {
       document.getElementById("qr-modal").classList.remove("hidden");
+      // 만약 Render 등 이미 외부 도메인에서 접속 중이라면 현재 주소로 즉시 QR 표시
+      const currentOrigin = window.location.origin;
+      if (!currentOrigin.includes("127.0.0.1") && !currentOrigin.includes("localhost")) {
+        document.getElementById("qr-loading").classList.add("hidden");
+        const qrImg = document.getElementById("qr-image");
+        qrImg.src = "https://api.qrserver.com/v1/create-qr-code/?size=250x250&margin=10&data=" + encodeURIComponent(currentOrigin);
+        qrImg.classList.remove("hidden");
+        document.getElementById("tunnel-url-input").value = currentOrigin;
+        return;
+      }
+
       const ready = await checkTunnelStatus();
       if (!ready) {
         document.getElementById("qr-image").classList.add("hidden");
         document.getElementById("qr-loading").classList.remove("hidden");
-        document.getElementById("tunnel-url-input").value = "주소 생성 중... 잠시만 기다려주세요";
+        document.getElementById("tunnel-url-input").value = "주소 연결 중... 잠시만 기다려주세요";
         if (tunnelCheckTimer) clearInterval(tunnelCheckTimer);
         tunnelCheckTimer = setInterval(async () => {
           const ok = await checkTunnelStatus();
@@ -2638,7 +2659,7 @@
 
     function copyTunnelUrl() {
       const input = document.getElementById("tunnel-url-input");
-      if (!input.value || input.value.startsWith("주소 생성")) {
+      if (!input.value || input.value.startsWith("주소")) {
         alert("아직 주소가 생성되지 않았습니다.");
         return;
       }
