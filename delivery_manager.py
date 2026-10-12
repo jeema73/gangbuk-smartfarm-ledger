@@ -375,30 +375,31 @@ def get_grouped_orders(search_date: Optional[str] = None, search_store: Optional
     crop_price_map = {c["name"]: float(c.get("unit_price", 0)) for c in crops_detailed}
     groups = {}  # key: (date_str, store_name)
 
-    # 1. 로컬 엑셀 기본 읽기
+    # 1. 구글 스프레드시트 실시간 데이터 조회 (우선 적용)
     raw_rows = []
-    for r in range(2, ws.max_row + 1):
-        raw_rows.append({
-            "row": r,
-            "no": ws.cell(r, 1).value,
-            "order_date": ws.cell(r, 2).value,
-            "store_name": ws.cell(r, 3).value,
-            "crop": ws.cell(r, 4).value,
-            "unit_price": ws.cell(r, 5).value,
-            "qty": ws.cell(r, 6).value,
-            "amount": ws.cell(r, 7).value,
-            "delivery_date": ws.cell(r, 8).value,
-            "remarks": ws.cell(r, 9).value
-        })
-
-    # 2. 구글 스프레드시트 실시간 데이터 병합 (웹에서 추가 등록된 최신 건 자동 반영)
     try:
         import google_sheets_manager
         sheet_rows = google_sheets_manager.fetch_ledger_rows_from_sheet()
-        if sheet_rows and len(sheet_rows) >= len(raw_rows):
+        if sheet_rows:
             raw_rows = sheet_rows
     except Exception:
         pass
+
+    # 2. 구글 시트 조회가 실패했거나 비어있는 경우 로컬 엑셀 기본 읽기
+    if not raw_rows:
+        for r in range(2, ws.max_row + 1):
+            raw_rows.append({
+                "row": r,
+                "no": ws.cell(r, 1).value,
+                "order_date": ws.cell(r, 2).value,
+                "store_name": ws.cell(r, 3).value,
+                "crop": ws.cell(r, 4).value,
+                "unit_price": ws.cell(r, 5).value,
+                "qty": ws.cell(r, 6).value,
+                "amount": ws.cell(r, 7).value,
+                "delivery_date": ws.cell(r, 8).value,
+                "remarks": ws.cell(r, 9).value
+            })
 
     for row_obj in raw_rows:
         no = row_obj.get("no")
@@ -593,13 +594,13 @@ def add_delivery_order(data: Dict[str, Any]) -> Dict[str, Any]:
         ws.cell(curr_row, 8, dt_delivery)
         ws.cell(curr_row, 9, remarks if remarks else None)
 
-    # 5. 구글 스프레드시트 클라우드 실시간 동기화 (설정되어 있을 경우)
+    # 5. 구글 스프레드시트 클라우드 실시간 동기화 (전체 대장을 항상 100% 동일하게 동기화)
     google_synced = False
     try:
         import google_sheets_manager
         if google_sheets_manager.is_google_sheets_configured():
-            google_sheets_manager.append_order_to_sheet(data)
-            google_synced = True
+            res = google_sheets_manager.sync_full_ledger_to_sheet(force_local_excel=True)
+            google_synced = res.get("success", False)
     except Exception as g_err:
         print("[Google Sheets Sync Warning]:", g_err)
 
@@ -668,12 +669,11 @@ def delete_delivery_order(order_key: str) -> Dict[str, Any]:
 
     wb.save(EXCEL_PATH)
     try:
-        import threading
         import google_sheets_manager
         if google_sheets_manager.is_google_sheets_configured():
-            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, args=(True,), daemon=True).start()
-    except Exception:
-        pass
+            google_sheets_manager.sync_full_ledger_to_sheet(force_local_excel=True)
+    except Exception as g_err:
+        print("[Delete Google Sheets Sync Warning]:", g_err)
 
     return {
         "success": True,
@@ -760,12 +760,11 @@ def update_delivery_order(order_key: str, data: Dict[str, Any]) -> Dict[str, Any
 
     wb.save(EXCEL_PATH)
     try:
-        import threading
         import google_sheets_manager
         if google_sheets_manager.is_google_sheets_configured():
-            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, args=(True,), daemon=True).start()
-    except Exception:
-        pass
+            google_sheets_manager.sync_full_ledger_to_sheet(force_local_excel=True)
+    except Exception as g_err:
+        print("[Update Google Sheets Sync Warning]:", g_err)
 
     new_order_key = f"{new_order_date}___{new_store_name}"
     return {

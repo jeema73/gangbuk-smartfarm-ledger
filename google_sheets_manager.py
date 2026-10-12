@@ -146,8 +146,8 @@ def sync_full_ledger_to_sheet(force_local_excel: bool = False) -> Dict[str, Any]
         delivery_date_raw = ws.cell(r, 8).value
         remarks = ws.cell(r, 9).value
 
-        order_date_str = str(order_date_raw)[:10] if order_date_raw else ""
-        delivery_date_str = str(delivery_date_raw)[:10] if delivery_date_raw else order_date_str
+        order_date_str = delivery_manager.normalize_ledger_date(order_date_raw)
+        delivery_date_str = delivery_manager.normalize_ledger_date(delivery_date_raw) or order_date_str
         store_name_str = str(store_name).strip() if store_name else ""
         crop_str = str(crop).strip() if crop else ""
 
