@@ -106,23 +106,8 @@ def append_order_to_sheet(order_data: Dict[str, Any]):
             print("[Google Sheets gspread Error]:", e)
 
 def sync_crops_to_sheet() -> Dict[str, Any]:
-    """작물 품목 및 단가만 구글 스프레드시트 K:L열에 안전하게 동기화 (주문 데이터는 건드리지 않음)"""
-    conf = get_google_sheet_config()
-    webhook_url = conf.get("webhook_url")
-    if not webhook_url:
-        return {"success": False, "message": "구글 시트 Webhook URL이 설정되지 않았습니다."}
-
-    import delivery_manager
-    crops_detailed = delivery_manager.get_crops_detailed()
-    crops_data = [[c["name"], float(c.get("unit_price", 0.0))] for c in crops_detailed]
-
-    try:
-        res = requests.post(webhook_url, json={"action": "sync_crops", "crops": crops_data}, timeout=10)
-        if res.status_code == 200:
-            return {"success": True, "message": "구글 시트 작물 단가가 동기화되었습니다."}
-        return {"success": False, "message": f"구글 시트 작물 동기화 실패 ({res.status_code})"}
-    except Exception as e:
-        return {"success": False, "message": f"작물 동기화 오류: {str(e)}"}
+    """작물 품목 및 단가를 구글 스프레드시트 K:L열에 안전하게 동기화 (주문 데이터는 손실 없이 병합 유지)"""
+    return sync_full_ledger_to_sheet()
 
 def sync_full_ledger_to_sheet() -> Dict[str, Any]:
     """로컬 납품대장.xlsx의 전체 데이터(A~I열)와 작물/단가(K~L열)를 구글 스프레드시트에 동기화 전송 (단, 구글 시트의 최신 주문이 유실되지 않도록 병합 보장)"""
@@ -274,6 +259,43 @@ def fetch_supplier_from_sheet() -> Optional[Dict[str, str]]:
     except Exception as e:
         print("[Google Sheets Fetch Supplier Warning]:", e)
     return None
+
+def fetch_crops_from_sheet() -> Optional[List[Dict[str, Any]]]:
+    """구글 시트 납품대장 K:L 열에서 실시간 작물 및 단가를 읽어옵니다."""
+    import urllib.parse
+    import csv
+    import io
+    conf = get_google_sheet_config()
+    sheet_id = conf.get("sheet_id") or "1sqeqGdTVnGn0Rx5p2kjRmTX843dVTxIrJjdKvyflyBw"
+    try:
+        sheet_name = urllib.parse.quote("납품대장")
+        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&range=K1:L30&sheet={sheet_name}"
+        req = requests.get(url, timeout=5)
+        if req.status_code == 200 and req.text.strip():
+            reader = csv.reader(io.StringIO(req.text))
+            crops = []
+            for row in reader:
+                if len(row) >= 2:
+                    name = str(row[0]).strip()
+                    price_str = str(row[1]).replace(',', '').replace('원', '').strip()
+                    if name and name != "작물명":
+                        try:
+                            p = float(price_str)
+                        except Exception:
+                            p = 0.0
+                        crops.append({
+                            "name": name,
+                            "unit_price": p,
+                            "category": "채소류",
+                            "unit": "g",
+                            "remarks": ""
+                        })
+            if crops:
+                return crops
+    except Exception as e:
+        print("[Google Sheets Fetch Crops Warning]:", e)
+    return None
+
 
 def fetch_ledger_rows_from_sheet() -> Optional[List[Dict[str, Any]]]:
     """구글 시트 납품대장의 실제 주문 데이터를 실시간으로 읽어옵니다."""

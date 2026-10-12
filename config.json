@@ -36,10 +36,10 @@
     },
     {
       "name": "바질",
-      "unit_price": 30.0,
+      "unit_price": 35.0,
       "category": "허브류",
       "unit": "g",
-      "remarks": "패스토"
+      "remarks": "스위트바질"
     },
     {
       "name": "딸기(설향)",

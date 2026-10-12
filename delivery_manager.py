@@ -110,7 +110,22 @@ def get_crops_detailed() -> List[Dict[str, Any]]:
         except Exception:
             pass
 
-    # 엑셀 K, L 열에서도 누락된 작물이 있으면 자동 반영
+    # 2. 구글 시트 K:L 열에서 실시간 작물 및 단가 자동 반영
+    try:
+        import google_sheets_manager
+        sheet_crops = google_sheets_manager.fetch_crops_from_sheet()
+        if sheet_crops:
+            for sc in sheet_crops:
+                s_name = sc.get("name")
+                if s_name:
+                    if s_name in crops_map:
+                        crops_map[s_name]["unit_price"] = sc["unit_price"]
+                    else:
+                        crops_map[s_name] = sc
+    except Exception:
+        pass
+
+    # 3. 엑셀 K, L 열에서도 누락된 작물이 있으면 자동 반영
     try:
         if os.path.exists(EXCEL_PATH):
             wb = openpyxl.load_workbook(EXCEL_PATH, data_only=True)
