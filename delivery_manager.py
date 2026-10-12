@@ -347,23 +347,57 @@ def get_grouped_orders(search_date: Optional[str] = None, search_store: Optional
     crop_price_map = {c["name"]: float(c.get("unit_price", 0)) for c in crops_detailed}
     groups = {}  # key: (date_str, store_name)
 
+    # 1. 로컬 엑셀 기본 읽기
+    raw_rows = []
     for r in range(2, ws.max_row + 1):
-        no = ws.cell(r, 1).value
-        order_date_raw = ws.cell(r, 2).value
-        store_name = ws.cell(r, 3).value
-        crop = ws.cell(r, 4).value
-        unit_price = ws.cell(r, 5).value
-        qty = ws.cell(r, 6).value
-        amount = ws.cell(r, 7).value
-        delivery_date_raw = ws.cell(r, 8).value
-        remarks = ws.cell(r, 9).value
+        raw_rows.append({
+            "row": r,
+            "no": ws.cell(r, 1).value,
+            "order_date": ws.cell(r, 2).value,
+            "store_name": ws.cell(r, 3).value,
+            "crop": ws.cell(r, 4).value,
+            "unit_price": ws.cell(r, 5).value,
+            "qty": ws.cell(r, 6).value,
+            "amount": ws.cell(r, 7).value,
+            "delivery_date": ws.cell(r, 8).value,
+            "remarks": ws.cell(r, 9).value
+        })
+
+    # 2. 구글 스프레드시트 실시간 데이터 병합 (웹에서 추가 등록된 최신 건 자동 반영)
+    try:
+        import google_sheets_manager
+        sheet_rows = google_sheets_manager.fetch_ledger_rows_from_sheet()
+        if sheet_rows and len(sheet_rows) >= len(raw_rows):
+            raw_rows = sheet_rows
+    except Exception:
+        pass
+
+    for row_obj in raw_rows:
+        no = row_obj.get("no")
+        order_date_raw = row_obj.get("order_date")
+        store_name = row_obj.get("store_name")
+        crop = row_obj.get("crop")
+        unit_price = row_obj.get("unit_price")
+        qty = row_obj.get("qty")
+        amount = row_obj.get("amount")
+        delivery_date_raw = row_obj.get("delivery_date")
+        remarks = row_obj.get("remarks")
+        r = row_obj.get("row", 0)
         
         if not order_date_raw and not store_name:
             continue
             
-        order_date_str = str(order_date_raw)[:10] if order_date_raw else ""
-        delivery_date_str = str(delivery_date_raw)[:10] if delivery_date_raw else order_date_str
-        # 실제 기준일은 납품일자(배송일자) 기준
+        def normalize_date(val):
+            if not val: return ""
+            s = str(val).strip().split('(')[0].strip()
+            if s.count('/') == 2:
+                p = s.split('/')
+                if len(p[0]) == 2: p[0] = '20' + p[0]
+                return f"{p[0]}-{p[1].zfill(2)}-{p[2].zfill(2)}"
+            return s[:10]
+
+        order_date_str = normalize_date(order_date_raw)
+        delivery_date_str = normalize_date(delivery_date_raw) or order_date_str
         eff_date_str = delivery_date_str if delivery_date_str else order_date_str
         store_name_str = str(store_name).strip() if store_name else "미지정"
         crop_str = str(crop).strip() if crop else ""

@@ -234,3 +234,54 @@ def fetch_supplier_from_sheet() -> Optional[Dict[str, str]]:
         print("[Google Sheets Fetch Supplier Warning]:", e)
     return None
 
+def fetch_ledger_rows_from_sheet() -> Optional[List[Dict[str, Any]]]:
+    """구글 시트 납품대장의 실제 주문 데이터를 실시간으로 읽어옵니다."""
+    import urllib.parse
+    import csv
+    import io
+    conf = get_google_sheet_config()
+    sheet_id = conf.get("sheet_id") or "1sqeqGdTVnGn0Rx5p2kjRmTX843dVTxIrJjdKvyflyBw"
+    try:
+        sheet_name = urllib.parse.quote("납품대장")
+        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&range=A2:I&sheet={sheet_name}"
+        req = requests.get(url, timeout=5)
+        if req.status_code == 200 and req.text.strip():
+            reader = csv.reader(io.StringIO(req.text))
+            rows = []
+            for idx, r in enumerate(reader, start=2):
+                if len(r) >= 3 and (r[1].strip() or r[2].strip()):
+                    def _clean_num(val):
+                        try:
+                            return float(str(val).replace(',', '').replace(' ', '').replace('g', '').replace('원', '').strip())
+                        except Exception:
+                            return 0.0
+
+                    no = r[0].strip() if len(r) > 0 else str(idx - 1)
+                    order_date = r[1].strip() if len(r) > 1 else ""
+                    store_name = r[2].strip() if len(r) > 2 else ""
+                    crop = r[3].strip() if len(r) > 3 else ""
+                    unit_price = _clean_num(r[4]) if len(r) > 4 else 0.0
+                    qty = _clean_num(r[5]) if len(r) > 5 else 0.0
+                    amount = _clean_num(r[6]) if len(r) > 6 else 0.0
+                    delivery_date = r[7].strip() if len(r) > 7 else ""
+                    remarks = r[8].strip() if len(r) > 8 else ""
+
+                    rows.append({
+                        "row": idx,
+                        "no": no,
+                        "order_date": order_date,
+                        "store_name": store_name,
+                        "crop": crop,
+                        "unit_price": unit_price,
+                        "qty": qty,
+                        "amount": amount,
+                        "delivery_date": delivery_date,
+                        "remarks": remarks
+                    })
+            if rows:
+                return rows
+    except Exception as e:
+        print("[Google Sheets Fetch Ledger Warning]:", e)
+    return None
+
+
