@@ -174,7 +174,7 @@ def save_crops_list(crops_list: List[Dict[str, Any]]):
         import threading
         import google_sheets_manager
         if google_sheets_manager.is_google_sheets_configured():
-            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, daemon=True).start()
+            threading.Thread(target=google_sheets_manager.sync_crops_to_sheet, daemon=True).start()
     except Exception:
         pass
 

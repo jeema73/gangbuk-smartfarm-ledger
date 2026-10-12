@@ -105,8 +105,27 @@ def append_order_to_sheet(order_data: Dict[str, Any]):
         except Exception as e:
             print("[Google Sheets gspread Error]:", e)
 
+def sync_crops_to_sheet() -> Dict[str, Any]:
+    """작물 품목 및 단가만 구글 스프레드시트 K:L열에 안전하게 동기화 (주문 데이터는 건드리지 않음)"""
+    conf = get_google_sheet_config()
+    webhook_url = conf.get("webhook_url")
+    if not webhook_url:
+        return {"success": False, "message": "구글 시트 Webhook URL이 설정되지 않았습니다."}
+
+    import delivery_manager
+    crops_detailed = delivery_manager.get_crops_detailed()
+    crops_data = [[c["name"], float(c.get("unit_price", 0.0))] for c in crops_detailed]
+
+    try:
+        res = requests.post(webhook_url, json={"action": "sync_crops", "crops": crops_data}, timeout=10)
+        if res.status_code == 200:
+            return {"success": True, "message": "구글 시트 작물 단가가 동기화되었습니다."}
+        return {"success": False, "message": f"구글 시트 작물 동기화 실패 ({res.status_code})"}
+    except Exception as e:
+        return {"success": False, "message": f"작물 동기화 오류: {str(e)}"}
+
 def sync_full_ledger_to_sheet() -> Dict[str, Any]:
-    """로컬 납품대장.xlsx의 전체 데이터(A~I열)와 작물/단가(K~L열)를 구글 스프레드시트에 100% 동기화 전송"""
+    """로컬 납품대장.xlsx의 전체 데이터(A~I열)와 작물/단가(K~L열)를 구글 스프레드시트에 동기화 전송 (단, 구글 시트의 최신 주문이 유실되지 않도록 병합 보장)"""
     conf = get_google_sheet_config()
     webhook_url = conf.get("webhook_url")
     if not webhook_url:
@@ -171,6 +190,28 @@ def sync_full_ledger_to_sheet() -> Dict[str, Any]:
             delivery_date_str,
             str(remarks) if remarks is not None else ""
         ])
+
+    # 구글 시트에 이미 등록된 행들이 더 많거나 최신 건이 있다면 병합하여 덮어쓰기 방지
+    try:
+        sheet_rows = fetch_ledger_rows_from_sheet()
+        if sheet_rows and len(sheet_rows) > len(rows_data):
+            # 로컬 엑셀보다 구글 시트에 행이 더 많으면 구글 시트의 데이터를 유지/사용
+            merged_rows = []
+            for idx, sr in enumerate(sheet_rows, start=1):
+                merged_rows.append([
+                    idx,
+                    sr.get("order_date", ""),
+                    sr.get("store_name", ""),
+                    sr.get("crop", ""),
+                    sr.get("unit_price", 0.0),
+                    sr.get("qty", 0.0),
+                    sr.get("amount", 0.0),
+                    sr.get("delivery_date", ""),
+                    sr.get("remarks", "")
+                ])
+            rows_data = merged_rows
+    except Exception as e:
+        print("[Sync Full Merge Check Warning]:", e)
 
     crops_data = [[c["name"], float(c.get("unit_price", 0.0))] for c in crops_detailed]
 
