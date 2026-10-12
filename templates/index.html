@@ -258,7 +258,7 @@
         <!-- 기본 정보 입력 폼 -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 mb-6 sm:mb-8">
           <div>
-            <label class="block text-xs font-bold text-[#574c3e] mb-1.5">납품(주문) 일자 *</label>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1.5">납품일자 *</label>
             <input type="date" id="order-date" class="w-full px-3.5 py-2.5 ghibli-input text-sm font-medium">
           </div>
 
@@ -408,7 +408,7 @@
           <table class="w-full text-left border-collapse text-sm min-w-[700px]">
             <thead>
               <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
-                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">주문(납품)일자</th>
+                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">납품일자</th>
                 <th class="py-3 px-4 min-w-[135px] whitespace-nowrap">매장명 (납품처)</th>
                 <th class="py-3 px-4 min-w-[200px]">포함된 품목 내역</th>
                 <th class="py-3 px-4 min-w-[95px] text-right whitespace-nowrap">총 수량</th>
@@ -1394,7 +1394,7 @@
         const itemsDesc = (item.items || []).map(it => `${it.crop} ${it.qty}g`).join(', ');
         return `
           <tr class="hover:bg-[#fbf7ee] transition">
-            <td class="py-3 px-4 font-semibold text-[#42382b] text-center">${item.order_date}</td>
+            <td class="py-3 px-4 font-semibold text-[#42382b] text-center">${item.delivery_date || item.order_date}</td>
             <td class="py-3 px-4 font-bold text-[#26211a]">${item.store_name}</td>
             <td class="py-3 px-4 text-[#6e6353] text-xs">${itemsDesc}</td>
             <td class="py-3 px-4 text-right font-bold text-[#42382b]">${item.total_qty.toLocaleString()}g</td>

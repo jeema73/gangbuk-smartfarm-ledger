@@ -362,23 +362,25 @@ def get_grouped_orders(search_date: Optional[str] = None, search_store: Optional
             continue
             
         order_date_str = str(order_date_raw)[:10] if order_date_raw else ""
-        delivery_date_str = str(delivery_date_raw)[:10] if delivery_date_raw else ""
+        delivery_date_str = str(delivery_date_raw)[:10] if delivery_date_raw else order_date_str
+        # 실제 기준일은 납품일자(배송일자) 기준
+        eff_date_str = delivery_date_str if delivery_date_str else order_date_str
         store_name_str = str(store_name).strip() if store_name else "미지정"
         crop_str = str(crop).strip() if crop else ""
         
-        if year_month and not order_date_str.startswith(year_month):
+        if year_month and not eff_date_str.startswith(year_month) and not order_date_str.startswith(year_month):
             continue
-        if search_date and search_date != order_date_str:
+        if search_date and search_date != eff_date_str and search_date != order_date_str:
             continue
         if search_store and search_store not in store_name_str:
             continue
 
-        key = (order_date_str, store_name_str)
+        key = (eff_date_str, store_name_str)
         if key not in groups:
             groups[key] = {
                 "order_key": f"{order_date_str}___{store_name_str}",
                 "order_date": order_date_str,
-                "delivery_date": delivery_date_str,
+                "delivery_date": eff_date_str,
                 "store_name": store_name_str,
                 "address": store_addr_map.get(store_name_str, ""),
                 "items": [],
@@ -407,15 +409,15 @@ def get_grouped_orders(search_date: Optional[str] = None, search_store: Optional
             "unit_price": unit_price_val,
             "qty": qty_val,
             "amount": amount_val,
-            "delivery_date": delivery_date_str,
+            "delivery_date": eff_date_str,
             "remarks": str(remarks) if remarks is not None else ""
         })
         groups[key]["total_qty"] += qty_val
         groups[key]["total_amount"] += amount_val
 
-    # Convert to list and sort by date descending
+    # Convert to list and sort by delivery_date descending
     result = list(groups.values())
-    result.sort(key=lambda x: (x["order_date"], x["store_name"]), reverse=True)
+    result.sort(key=lambda x: (x["delivery_date"] or x["order_date"], x["store_name"]), reverse=True)
     return result[:limit]
 
 def get_receipt_data(order_key: str) -> Optional[Dict[str, Any]]:
@@ -834,19 +836,30 @@ def get_store_settlement(store_name: str, year_month: Optional[str] = None, star
             continue
 
         raw_date = ws.cell(r, 2).value
-        if isinstance(raw_date, datetime):
-            date_str = raw_date.strftime("%Y-%m-%d")
+        raw_delivery = ws.cell(r, 8).value
+        
+        if isinstance(raw_delivery, datetime):
+            delivery_date_str = raw_delivery.strftime("%Y-%m-%d")
         else:
-            date_str = str(raw_date).strip() if raw_date else ""
+            delivery_date_str = str(raw_delivery).strip()[:10] if raw_delivery else ""
+
+        if isinstance(raw_date, datetime):
+            order_date_str = raw_date.strftime("%Y-%m-%d")
+        else:
+            order_date_str = str(raw_date).strip()[:10] if raw_date else ""
+
+        # 실질적 기준일자 = 납품일자 우선
+        eff_date = delivery_date_str if delivery_date_str else order_date_str
 
         # 기간별 필터링
-        if start_date and date_str < start_date:
+        if start_date and eff_date < start_date and order_date_str < start_date:
             continue
-        if end_date and date_str > end_date:
+        if end_date and eff_date > end_date and order_date_str > end_date:
             continue
         # 월별 필터링 (기간 지정이 없을 경우)
-        if not start_date and not end_date and year_month and year_month != "전체" and not date_str.startswith(year_month):
-            continue
+        if not start_date and not end_date and year_month and year_month != "전체":
+            if not eff_date.startswith(year_month) and not order_date_str.startswith(year_month):
+                continue
 
         crop = str(ws.cell(r, 4).value or "").strip()
         
@@ -937,19 +950,29 @@ def get_monthly_summary(year_month: Optional[str] = None, start_date: Optional[s
         store_name = str(s_val).strip()
 
         raw_date = ws.cell(r, 2).value
-        if isinstance(raw_date, datetime):
-            date_str = raw_date.strftime("%Y-%m-%d")
+        raw_delivery = ws.cell(r, 8).value
+        
+        if isinstance(raw_delivery, datetime):
+            delivery_date_str = raw_delivery.strftime("%Y-%m-%d")
         else:
-            date_str = str(raw_date).strip() if raw_date else ""
+            delivery_date_str = str(raw_delivery).strip()[:10] if raw_delivery else ""
+
+        if isinstance(raw_date, datetime):
+            order_date_str = raw_date.strftime("%Y-%m-%d")
+        else:
+            order_date_str = str(raw_date).strip()[:10] if raw_date else ""
+
+        eff_date = delivery_date_str if delivery_date_str else order_date_str
 
         # 기간별 필터링
-        if start_date and date_str < start_date:
+        if start_date and eff_date < start_date and order_date_str < start_date:
             continue
-        if end_date and date_str > end_date:
+        if end_date and eff_date > end_date and order_date_str > end_date:
             continue
         # 월별 필터링 (기간 지정이 없을 경우)
-        if not start_date and not end_date and year_month and year_month != "전체" and not date_str.startswith(year_month):
-            continue
+        if not start_date and not end_date and year_month and year_month != "전체":
+            if not eff_date.startswith(year_month) and not order_date_str.startswith(year_month):
+                continue
 
         crop = str(ws.cell(r, 4).value or "").strip()
         try:
