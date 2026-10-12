@@ -864,23 +864,48 @@ def get_store_settlement(store_name: str, year_month: Optional[str] = None, star
     crops_detailed = get_crops_detailed()
     crop_price_map = {c["name"]: float(c.get("unit_price", 0)) for c in crops_detailed}
 
+    # 1. 로컬 엑셀 기본 읽기
+    raw_rows = []
     for r in range(2, ws.max_row + 1):
-        s_val = ws.cell(r, 3).value
-        if not s_val or str(s_val).strip() != store_name:
+        raw_rows.append({
+            "store_name": str(ws.cell(r, 3).value or "").strip(),
+            "order_date": ws.cell(r, 2).value,
+            "crop": str(ws.cell(r, 4).value or "").strip(),
+            "unit_price": ws.cell(r, 5).value,
+            "qty": ws.cell(r, 6).value,
+            "amount": ws.cell(r, 7).value,
+            "delivery_date": ws.cell(r, 8).value,
+            "remarks": str(ws.cell(r, 9).value or "").strip()
+        })
+
+    # 2. 구글 스프레드시트 실시간 데이터 병합
+    try:
+        import google_sheets_manager
+        sheet_rows = google_sheets_manager.fetch_ledger_rows_from_sheet()
+        if sheet_rows and len(sheet_rows) >= len(raw_rows):
+            raw_rows = sheet_rows
+    except Exception:
+        pass
+
+    def normalize_date(val):
+        if not val: return ""
+        s = str(val).strip().split('(')[0].strip()
+        if s.count('/') == 2:
+            p = s.split('/')
+            if len(p[0]) == 2: p[0] = '20' + p[0]
+            return f"{p[0]}-{p[1].zfill(2)}-{p[2].zfill(2)}"
+        return s[:10]
+
+    for row_obj in raw_rows:
+        s_val = str(row_obj.get("store_name", "")).strip()
+        if not s_val or s_val != store_name:
             continue
 
-        raw_date = ws.cell(r, 2).value
-        raw_delivery = ws.cell(r, 8).value
+        raw_date = row_obj.get("order_date")
+        raw_delivery = row_obj.get("delivery_date")
         
-        if isinstance(raw_delivery, datetime):
-            delivery_date_str = raw_delivery.strftime("%Y-%m-%d")
-        else:
-            delivery_date_str = str(raw_delivery).strip()[:10] if raw_delivery else ""
-
-        if isinstance(raw_date, datetime):
-            order_date_str = raw_date.strftime("%Y-%m-%d")
-        else:
-            order_date_str = str(raw_date).strip()[:10] if raw_date else ""
+        delivery_date_str = normalize_date(raw_delivery)
+        order_date_str = normalize_date(raw_date)
 
         # 실질적 기준일자 = 납품일자 우선
         eff_date = delivery_date_str if delivery_date_str else order_date_str
@@ -895,47 +920,47 @@ def get_store_settlement(store_name: str, year_month: Optional[str] = None, star
             if not eff_date.startswith(year_month) and not order_date_str.startswith(year_month):
                 continue
 
-        crop = str(ws.cell(r, 4).value or "").strip()
+        crop = str(row_obj.get("crop", "")).strip()
         
         def _sf(v):
             try:
-                return float(v)
+                return float(str(v).replace(',', '').replace(' ', '').replace('g', '').strip())
             except Exception:
                 return 0.0
 
         def _si(v):
             try:
-                return int(round(float(v)))
+                return int(round(float(str(v).replace(',', '').replace(' ', '').replace('원', '').strip())))
             except Exception:
                 return 0
 
-        unit_price = _sf(ws.cell(r, 5).value)
-        qty = _sf(ws.cell(r, 6).value)
-        amount = _si(ws.cell(r, 7).value)
+        unit_price = _sf(row_obj.get("unit_price"))
+        qty = _sf(row_obj.get("qty"))
+        amount = _si(row_obj.get("amount"))
         
         if unit_price <= 0:
             unit_price = crop_price_map.get(crop, 0.0)
         if amount <= 0:
             amount = round(qty * unit_price)
 
-        delivery_date = str(ws.cell(r, 8).value or "")[:10]
-        remarks = str(ws.cell(r, 9).value or "").strip()
+        delivery_date = delivery_date_str or order_date_str
+        remarks = str(row_obj.get("remarks", "")).strip()
 
         total_qty += qty
         total_amount += amount
 
         items_list.append({
-            "order_date": date_str,
+            "order_date": order_date_str,
             "crop": crop,
             "unit_price": unit_price,
             "qty": qty,
             "amount": amount,
-            "delivery_date": delivery_date or date_str,
+            "delivery_date": delivery_date,
             "remarks": remarks
         })
 
-    # 날짜순 정렬
-    items_list.sort(key=lambda x: x["order_date"])
+    # 납품일자순 정렬
+    items_list.sort(key=lambda x: (x["delivery_date"] or x["order_date"]))
 
     korean_amount = number_to_korean(total_amount)
     supplier = get_supplier_info()
@@ -977,24 +1002,48 @@ def get_monthly_summary(year_month: Optional[str] = None, start_date: Optional[s
     crops_detailed = get_crops_detailed()
     crop_price_map = {c["name"]: float(c.get("unit_price", 0)) for c in crops_detailed}
 
+    # 1. 로컬 엑셀 기본 읽기
+    raw_rows = []
     for r in range(2, ws.max_row + 1):
-        s_val = ws.cell(r, 3).value
-        if not s_val:
+        raw_rows.append({
+            "store_name": str(ws.cell(r, 3).value or "").strip(),
+            "order_date": ws.cell(r, 2).value,
+            "crop": str(ws.cell(r, 4).value or "").strip(),
+            "unit_price": ws.cell(r, 5).value,
+            "qty": ws.cell(r, 6).value,
+            "amount": ws.cell(r, 7).value,
+            "delivery_date": ws.cell(r, 8).value,
+            "remarks": str(ws.cell(r, 9).value or "").strip()
+        })
+
+    # 2. 구글 스프레드시트 실시간 데이터 병합
+    try:
+        import google_sheets_manager
+        sheet_rows = google_sheets_manager.fetch_ledger_rows_from_sheet()
+        if sheet_rows and len(sheet_rows) >= len(raw_rows):
+            raw_rows = sheet_rows
+    except Exception:
+        pass
+
+    def normalize_date(val):
+        if not val: return ""
+        s = str(val).strip().split('(')[0].strip()
+        if s.count('/') == 2:
+            p = s.split('/')
+            if len(p[0]) == 2: p[0] = '20' + p[0]
+            return f"{p[0]}-{p[1].zfill(2)}-{p[2].zfill(2)}"
+        return s[:10]
+
+    for row_obj in raw_rows:
+        store_name = str(row_obj.get("store_name", "")).strip()
+        if not store_name:
             continue
-        store_name = str(s_val).strip()
 
-        raw_date = ws.cell(r, 2).value
-        raw_delivery = ws.cell(r, 8).value
+        raw_date = row_obj.get("order_date")
+        raw_delivery = row_obj.get("delivery_date")
         
-        if isinstance(raw_delivery, datetime):
-            delivery_date_str = raw_delivery.strftime("%Y-%m-%d")
-        else:
-            delivery_date_str = str(raw_delivery).strip()[:10] if raw_delivery else ""
-
-        if isinstance(raw_date, datetime):
-            order_date_str = raw_date.strftime("%Y-%m-%d")
-        else:
-            order_date_str = str(raw_date).strip()[:10] if raw_date else ""
+        delivery_date_str = normalize_date(raw_delivery)
+        order_date_str = normalize_date(raw_date)
 
         eff_date = delivery_date_str if delivery_date_str else order_date_str
 
@@ -1008,15 +1057,22 @@ def get_monthly_summary(year_month: Optional[str] = None, start_date: Optional[s
             if not eff_date.startswith(year_month) and not order_date_str.startswith(year_month):
                 continue
 
-        crop = str(ws.cell(r, 4).value or "").strip()
-        try:
-            qty = float(ws.cell(r, 6).value or 0)
-        except Exception:
-            qty = 0.0
-        try:
-            amount = int(round(float(ws.cell(r, 7).value or 0)))
-        except Exception:
-            amount = 0
+        crop = str(row_obj.get("crop", "")).strip()
+        
+        def _sf(v):
+            try:
+                return float(str(v).replace(',', '').replace(' ', '').replace('g', '').strip())
+            except Exception:
+                return 0.0
+
+        def _si(v):
+            try:
+                return int(round(float(str(v).replace(',', '').replace(' ', '').replace('원', '').strip())))
+            except Exception:
+                return 0
+
+        qty = _sf(row_obj.get("qty"))
+        amount = _si(row_obj.get("amount"))
 
         if amount <= 0:
             u_p = crop_price_map.get(crop, 0.0)
