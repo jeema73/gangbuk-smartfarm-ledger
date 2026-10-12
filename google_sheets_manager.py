@@ -188,3 +188,49 @@ def sync_full_ledger_to_sheet() -> Dict[str, Any]:
             return {"success": False, "message": f"구글 시트 전송 오류 (HTTP {res.status_code})"}
     except Exception as e:
         return {"success": False, "message": f"구글 시트 통신 오류: {str(e)}"}
+
+def fetch_supplier_from_sheet() -> Optional[Dict[str, str]]:
+    """구글 시트 납품대장 N:O 열에서 실시간 공급자 정보를 읽어옵니다."""
+    import urllib.parse
+    import csv
+    import io
+    conf = get_google_sheet_config()
+    sheet_id = conf.get("sheet_id") or "1sqeqGdTVnGn0Rx5p2kjRmTX843dVTxIrJjdKvyflyBw"
+    try:
+        sheet_name = urllib.parse.quote("납품대장")
+        url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&range=N1:O10&sheet={sheet_name}"
+        req = requests.get(url, timeout=5)
+        if req.status_code == 200 and req.text.strip():
+            reader = csv.reader(io.StringIO(req.text))
+            supp_data = {}
+            for row in reader:
+                if len(row) >= 2:
+                    k = str(row[0]).strip()
+                    v = str(row[1]).strip()
+                    if k and v:
+                        supp_data[k] = v
+            key_map = {
+                "상호": "name",
+                "기관명": "name",
+                "부서": "department",
+                "사업자번호": "biz_no",
+                "등록번호": "biz_no",
+                "주소": "address",
+                "소재지": "address",
+                "담당자": "manager",
+                "성함": "manager",
+                "연락처": "tel",
+                "전화번호": "tel"
+            }
+            parsed = {}
+            for raw_k, raw_v in supp_data.items():
+                for mk, pk in key_map.items():
+                    if mk in raw_k:
+                        parsed[pk] = raw_v
+                        break
+            if len(parsed) >= 2:
+                return parsed
+    except Exception as e:
+        print("[Google Sheets Fetch Supplier Warning]:", e)
+    return None
+

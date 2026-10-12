@@ -20,7 +20,7 @@
         extend: {
           colors: {
             ghibli: {
-              forest: '#2d5a43',
+              forest: '#2d5a43'                                                                                                                                                                                                                                                                                                                                                                                                      ,
               forestDark: '#1e3f2e',
               forestLight: '#3d7a5a',
               leaf: '#4a8a65',
@@ -710,7 +710,7 @@
               <h2 class="text-base font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
                 <i class="fa-solid fa-file-excel text-[#2d5a43]"></i> 최신 엑셀 파일 업로드 / 교체
               </h2>
-              <p class="text-xs text-[#716553] mt-0.5">주무관님께 받은 최신 납품대장 엑셀 파일을 업로드합니다.</p>
+              <p class="text-xs text-[#716553] mt-0.5">최신 납품대장 엑셀 파일을 업로드합니다.</p>
             </div>
 
             <div class="bg-[#f0f8f2] border border-[#cbe5d2] rounded-2xl p-4 mb-4 text-xs text-[#315740] leading-relaxed shadow-xs">
@@ -1111,6 +1111,15 @@
           <select onchange="onCropChange(${rowIdCounter})" class="crop-select w-full px-3 py-2 bg-[#faf7f0] border border-[#ded5c4] rounded-xl text-sm font-semibold text-[#2c261e] focus:ring-1 focus:ring-[#3d7a5a] focus:bg-white focus:outline-none">
             ${cropsOptions}
           </select>
+          <div id="leafy-sub-wrap-${rowIdCounter}" class="hidden mt-1 flex items-center gap-1.5">
+            <span class="text-[11px] font-bold text-[#3d7a5a] whitespace-nowrap">품종:</span>
+            <select onchange="onLeafySubChange(${rowIdCounter})" class="leafy-sub-select w-full px-2 py-1 text-xs bg-[#eef7f0] border border-[#bcdbc5] rounded-lg font-bold text-[#2d5a43] focus:outline-none">
+              <option value="프릴아이스">프릴아이스</option>
+              <option value="이자트릭스">이자트릭스</option>
+              <option value="카이피라">카이피라</option>
+              <option value="">(품종 미지정)</option>
+            </select>
+          </div>
           <input type="text" placeholder="작물명 입력" class="crop-custom hidden mt-1 w-full px-2 py-1 text-xs border border-[#ded5c4] rounded-lg">
         </td>
         <td class="py-3 px-4">
@@ -1161,17 +1170,42 @@
       const cropSelect = row.querySelector(".crop-select");
       const cropCustom = row.querySelector(".crop-custom");
       const priceInput = row.querySelector(".price-input");
+      const leafyWrap = document.getElementById(`leafy-sub-wrap-${id}`);
+      const remarksInput = row.querySelector(".remarks-input");
 
       if (cropSelect.value === "__CUSTOM__") {
         cropCustom.classList.remove("hidden");
         cropCustom.focus();
+        if (leafyWrap) leafyWrap.classList.add("hidden");
         priceInput.value = 0;
       } else {
         cropCustom.classList.add("hidden");
         const cropName = cropSelect.value;
         priceInput.value = metaData.crops[cropName] || 0;
+
+        if (cropName.includes("엽채류")) {
+          if (leafyWrap) {
+            leafyWrap.classList.remove("hidden");
+            const subSelect = leafyWrap.querySelector(".leafy-sub-select");
+            if (subSelect && !remarksInput.value) {
+              remarksInput.value = subSelect.value;
+            }
+          }
+        } else {
+          if (leafyWrap) leafyWrap.classList.add("hidden");
+        }
       }
       calcRow(id);
+    }
+
+    function onLeafySubChange(id) {
+      const row = document.getElementById(`item-row-${id}`);
+      const leafyWrap = document.getElementById(`leafy-sub-wrap-${id}`);
+      const remarksInput = row.querySelector(".remarks-input");
+      if (leafyWrap) {
+        const subSelect = leafyWrap.querySelector(".leafy-sub-select");
+        remarksInput.value = subSelect.value;
+      }
     }
 
     function calcRow(id) {
@@ -2545,9 +2579,11 @@
               <span style="font-size: 9px; color: #555;">합계 금액:</span>
               <span style="font-size: 11px; font-weight: 800; margin-left: 6px;">일금 ${data.korean_amount} (₩ ${data.formatted_total_amount})</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px; font-size: 10px;">
-              <span>위 물품을 정히 영수(납품)함.</span>
-              <span style="border-bottom: 1px solid #000; width: 90px; text-align: right; display: inline-block; padding-bottom: 2px;">인수자 : &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(서명)</span>
+            <div style="display: flex; align-items: center; gap: 10px; font-size: 10px;">
+              <span>위 물품을 정히 ${isSupplierCopy ? '영수(인수)' : '납품'}함.</span>
+              <span style="border-bottom: 1.5px solid #000; width: 150px; text-align: right; display: inline-block; padding-bottom: 2px;">
+                ${isSupplierCopy ? '인수자(매장) :' : '납품자(공급자) :'} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(서명)
+              </span>
             </div>
           </div>
 

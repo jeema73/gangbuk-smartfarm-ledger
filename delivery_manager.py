@@ -19,16 +19,29 @@ DEFAULT_SUPPLIER = {
 }
 
 def get_supplier_info() -> Dict[str, str]:
+    # 1. 로컬 config.json 우선 로드
+    supplier = DEFAULT_SUPPLIER.copy()
     if os.path.exists(CONFIG_PATH):
         try:
             with open(CONFIG_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
-                return {**DEFAULT_SUPPLIER, **data.get("supplier", {})}
+                supplier.update(data.get("supplier", {}))
         except Exception:
             pass
-    return DEFAULT_SUPPLIER.copy()
+
+    # 2. 구글 시트 납품대장 N:O열에 저장된 최신 공급자 정보가 있으면 자동 병합
+    try:
+        import google_sheets_manager
+        sheet_supplier = google_sheets_manager.fetch_supplier_from_sheet()
+        if sheet_supplier:
+            supplier.update(sheet_supplier)
+    except Exception:
+        pass
+
+    return supplier
 
 def save_supplier_info(info: Dict[str, str]):
+    # 1. config.json에 저장
     current_config = {}
     if os.path.exists(CONFIG_PATH):
         try:
@@ -39,6 +52,38 @@ def save_supplier_info(info: Dict[str, str]):
     current_config["supplier"] = info
     with open(CONFIG_PATH, "w", encoding="utf-8") as f:
         json.dump(current_config, f, ensure_ascii=False, indent=2)
+
+    # 2. 로컬 엑셀 납품대장 시트 N:O 열에 공급자 정보 동기화
+    try:
+        ensure_excel_exists()
+        wb = openpyxl.load_workbook(EXCEL_PATH, data_only=False)
+        if "납품대장" in wb.sheetnames:
+            ws_d = wb["납품대장"]
+            mapping = [
+                ("상호/기관명", info.get("name", "")),
+                ("부서", info.get("department", "")),
+                ("사업자번호", info.get("biz_no", "")),
+                ("소재지(주소)", info.get("address", "")),
+                ("담당자", info.get("manager", "")),
+                ("연락처", info.get("tel", ""))
+            ]
+            for idx, (lbl, val) in enumerate(mapping, start=1):
+                ws_d.cell(idx, 14, lbl) # N열
+                ws_d.cell(idx, 15, val) # O열
+            wb.save(EXCEL_PATH)
+    except Exception as e:
+        print("[Excel Supplier Sync Warning]:", e)
+
+    # 3. 구글 스프레드시트 Webhook 및 동기화 요청
+    try:
+        import google_sheets_manager
+        conf = google_sheets_manager.get_google_sheet_config()
+        webhook_url = conf.get("webhook_url")
+        if webhook_url:
+            import requests
+            requests.post(webhook_url, json={"action": "save_supplier", "supplier": info}, timeout=10)
+    except Exception as g_err:
+        print("[Google Sheet Supplier Sync Warning]:", g_err)
 
 DEFAULT_CROPS_LIST = [
     {"name": "루꼴라", "unit_price": 17.7, "category": "허브류", "unit": "g", "remarks": "생잎/피자용"},
