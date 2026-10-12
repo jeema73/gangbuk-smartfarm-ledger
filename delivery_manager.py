@@ -247,6 +247,19 @@ def delete_crop(crop_name: str) -> Dict[str, Any]:
         raise ValueError("해당 작물을 찾을 수 없습니다.")
     save_crops_list(new_crops)
     return {"success": True, "message": f"'{crop_name}' 작물이 삭제되었습니다."}
+def normalize_ledger_date(val: Any) -> str:
+    """날짜 값(datetime 또는 문자열 등)을 YYYY-MM-DD 형식으로 통일"""
+    if not val:
+        return ""
+    if isinstance(val, datetime):
+        return val.strftime("%Y-%m-%d")
+    s = str(val).strip().split('(')[0].strip()
+    if s.count('/') == 2:
+        p = s.split('/')
+        if len(p[0]) == 2:
+            p[0] = '20' + p[0]
+        return f"{p[0]}-{p[1].zfill(2)}-{p[2].zfill(2)}"
+    return s[:10]
 
 def number_to_korean(num: int) -> str:
     """숫자를 한글 금액 표기로 변환 (예: 34500 -> 삼만 사천오백 원정)"""
@@ -640,10 +653,10 @@ def delete_delivery_order(order_key: str) -> Dict[str, Any]:
         store_name_raw = ws.cell(r, 3).value
         if not order_date_raw and not store_name_raw:
             continue
-        order_date_str = str(order_date_raw)[:10] if order_date_raw else ""
+        order_date_str = normalize_ledger_date(order_date_raw)
         store_name_str = str(store_name_raw).strip() if store_name_raw else ""
 
-        if order_date_str == target_date and store_name_str == target_store:
+        if (order_date_str == target_date or str(order_date_raw)[:10] == target_date) and store_name_str == target_store:
             matching_rows.append(r)
 
     if not matching_rows:
@@ -658,7 +671,7 @@ def delete_delivery_order(order_key: str) -> Dict[str, Any]:
         import threading
         import google_sheets_manager
         if google_sheets_manager.is_google_sheets_configured():
-            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, daemon=True).start()
+            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, args=(True,), daemon=True).start()
     except Exception:
         pass
 
@@ -699,10 +712,10 @@ def update_delivery_order(order_key: str, data: Dict[str, Any]) -> Dict[str, Any
         store_name_raw = ws.cell(r, 3).value
         if not order_date_raw and not store_name_raw:
             continue
-        order_date_str = str(order_date_raw)[:10] if order_date_raw else ""
+        order_date_str = normalize_ledger_date(order_date_raw)
         store_name_str = str(store_name_raw).strip() if store_name_raw else ""
 
-        if order_date_str == target_date and store_name_str == target_store:
+        if (order_date_str == target_date or str(order_date_raw)[:10] == target_date) and store_name_str == target_store:
             matching_rows.append(r)
 
     if not matching_rows:
@@ -750,7 +763,7 @@ def update_delivery_order(order_key: str, data: Dict[str, Any]) -> Dict[str, Any
         import threading
         import google_sheets_manager
         if google_sheets_manager.is_google_sheets_configured():
-            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, daemon=True).start()
+            threading.Thread(target=google_sheets_manager.sync_full_ledger_to_sheet, args=(True,), daemon=True).start()
     except Exception:
         pass
 
