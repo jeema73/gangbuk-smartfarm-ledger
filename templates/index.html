@@ -2476,25 +2476,19 @@
       let startDate = "";
       let endDate = "";
 
-      // 현재 활성화된 탭에 따라 필터값 추출
-      if (!document.getElementById("view-reports").classList.contains("hidden")) {
-        filterMonth = document.getElementById("report-month-select").value;
-        startDate = document.getElementById("report-start-date").value;
-        endDate = document.getElementById("report-end-date").value;
-        const repType = document.getElementById("report-type-select").value;
+      const viewReports = document.getElementById("view-reports");
+      const isReportsActive = viewReports && !viewReports.classList.contains("hidden");
+
+      if (isReportsActive) {
+        filterMonth = document.getElementById("report-month-select") ? document.getElementById("report-month-select").value : "";
+        startDate = document.getElementById("report-start-date") ? document.getElementById("report-start-date").value : "";
+        endDate = document.getElementById("report-end-date") ? document.getElementById("report-end-date").value : "";
+        const repType = document.getElementById("report-type-select") ? document.getElementById("report-type-select").value : "";
         if (repType === "store-settlement") {
-          filterStore = document.getElementById("report-store-select").value;
+          filterStore = document.getElementById("report-store-select") ? document.getElementById("report-store-select").value : "";
         }
-      } else if (!document.getElementById("view-settlement").classList.contains("hidden")) {
-        filterStore = document.getElementById("settle-store-select").value;
-        filterMonth = document.getElementById("settle-month-select").value;
-        startDate = document.getElementById("settle-start-date").value;
-        endDate = document.getElementById("settle-end-date").value;
-      } else if (!document.getElementById("view-summary").classList.contains("hidden")) {
-        filterMonth = document.getElementById("monthly-summary-select").value;
-        startDate = document.getElementById("summary-start-date").value;
-        endDate = document.getElementById("summary-end-date").value;
       } else {
+        // 납품대장 관리(view-history) 또는 기타 탭 활성화 시
         filterMonth = document.getElementById("filter-month") ? document.getElementById("filter-month").value : "";
         filterDate = document.getElementById("filter-date") ? document.getElementById("filter-date").value : "";
         filterStore = document.getElementById("filter-store") ? document.getElementById("filter-store").value.trim() : "";
