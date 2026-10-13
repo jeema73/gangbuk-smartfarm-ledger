@@ -186,6 +186,7 @@ def get_monthly_summary_report(
 
     return {
         "period_label": period_label,
+        "year_month": period_label,
         "stores": result_list,
         "store_count": len(result_list),
         "grand_total_orders": grand_total_orders,

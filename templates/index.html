@@ -966,6 +966,9 @@
       const storeSelect = document.getElementById("report-store-select");
       if (subType === "store-settlement") {
         storeSelect.classList.remove("hidden");
+        if (!storeSelect.value && storeSelect.options.length > 1) {
+          storeSelect.selectedIndex = 1;
+        }
       } else {
         storeSelect.classList.add("hidden");
       }
@@ -2372,7 +2375,7 @@
                 <span style="font-size: 12px; font-weight: bold; color: #059669; white-space: nowrap;">서울특별시 강북구 스마트팜</span>
               </div>
               <h1 style="font-size: 20px; font-weight: 900; letter-spacing: 2px; margin: 2px 0 0 0; white-space: nowrap;">월간 납품 및 정산 총괄 집계표</h1>
-              <div style="font-size: 11px; color: #444; margin-top: 2px; white-space: nowrap;">대상 기간: <b>${data.year_month}</b> | 로컬푸드 활성화 상생지원</div>
+              <div style="font-size: 11px; color: #444; margin-top: 2px; white-space: nowrap;">대상 기간: <b>${data.year_month || data.period_label || '전체 기간'}</b> | 로컬푸드 활성화 상생지원</div>
             </div>
 
             <!-- 결재 도장 직인란 (담당 - 팀장 - 과장) -->
@@ -2833,12 +2836,25 @@
       document.getElementById("preview-modal").classList.remove("hidden");
     }
 
+    // 날짜를 YYYY년 M월 D일 형식으로 변환하는 함수
+    function formatKoreanDate(dateStr) {
+      if (!dateStr) return "";
+      const parts = dateStr.split("-");
+      if (parts.length === 3) {
+        return `${parts[0]}년 ${parseInt(parts[1], 10)}월 ${parseInt(parts[2], 10)}일`;
+      }
+      return dateStr;
+    }
+
     // ========================================================
     // 납품확인서(거래명세표) 렌더링 함수
     // ========================================================
     function generateReceiptHTML(data, isSupplierCopy = true) {
       const copyTitle = isSupplierCopy ? "공급자 보관용" : "공급받는자 보관용";
       const sup = data.supplier || {};
+      const delivDateStr = data.delivery_date || data.order_date || "";
+      const formattedDate = formatKoreanDate(delivDateStr);
+      const deliveryManagerName = sup.delivery_manager || "박기남";
       
       // 테이블 행 생성 (기본 4행 이상 확보하여 시원하게 표시)
       let rowsHTML = "";
@@ -2850,8 +2866,8 @@
             <tr style="height: 28px;">
               <td style="border: 1px solid #333; text-align: center; white-space: nowrap; font-size: 11px;">${i + 1}</td>
               <td style="border: 1px solid #333; padding-left: 8px; font-weight: bold; white-space: nowrap; font-size: 12px;">${it.crop}</td>
-              <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap; font-size: 11px;">${it.qty.toLocaleString()}g</td>
-              <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap; font-size: 11px;">${it.unit_price}</td>
+              <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap; font-size: 11px;">${Number(it.qty).toLocaleString()}g</td>
+              <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap; font-size: 11px;">${Number(it.unit_price).toLocaleString()}</td>
               <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-weight: bold; white-space: nowrap; font-size: 11px;">${Math.round(it.amount).toLocaleString()}</td>
               <td style="border: 1px solid #333; padding-left: 8px; font-size: 11px;">${it.remarks || ''}</td>
             </tr>
@@ -2870,8 +2886,11 @@
         }
       }
 
+      const totalQtyDisplay = data.formatted_total_qty || (data.total_qty ? Number(data.total_qty).toLocaleString() : "0");
+      const totalAmountDisplay = data.formatted_total_amount || (data.total_amount ? Number(data.total_amount).toLocaleString() : "0");
+
       return `
-        <div style="border: 2px solid #000; padding: 14px 16px; margin-bottom: 6px; background-color: #fff; font-family: 'Pretendard', sans-serif;">
+        <div style="border: 2px solid #000; padding: 14px 16px; margin-bottom: 4px; background-color: #fff; font-family: 'Pretendard', sans-serif;">
           
           <!-- 상단 헤더 -->
           <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 10px; border-bottom: 2px solid #000; padding-bottom: 8px;">
@@ -2887,7 +2906,7 @@
               <div style="font-size: 11px; font-weight: normal; letter-spacing: 1px; color: #444; margin-top: 2px; white-space: nowrap;">( 거 래 명 세 표 )</div>
             </div>
             <div style="text-align: right; font-size: 10px; color: #444; white-space: nowrap;">
-              관리번호: ${data.order_key.replace('___', '-')}
+              관리번호: ${data.order_key ? data.order_key.replace('___', '-') : ''}
             </div>
           </div>
 
@@ -2898,44 +2917,36 @@
             <div style="flex: 1; border: 1.5px solid #333;">
               <div style="background: #f1f5f9; text-align: center; font-weight: bold; font-size: 11px; padding: 3px; border-bottom: 1px solid #333; white-space: nowrap;">공급받는 자 (납품처)</div>
               <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-                <tr style="height: 22px;">
-                  <td style="width: 60px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">업 소 명</td>
+                <tr style="height: 24px;">
+                  <td style="width: 65px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">업 소 명</td>
                   <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; font-size: 13px; font-weight: bold; white-space: nowrap;">${data.store_name}</td>
                 </tr>
-                <tr style="height: 22px;">
+                <tr style="height: 24px;">
                   <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">소 재 지</td>
-                  <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; font-size: 10px; white-space: nowrap;">${data.address || '서울특별시 강북구 4.19로 인근'}</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; font-size: 11px; white-space: nowrap;">${data.address || '서울특별시 강북구 4.19로 인근'}</td>
                 </tr>
-                <tr style="height: 22px;">
-                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">주문일자</td>
-                  <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; white-space: nowrap;">${data.order_date}</td>
-                </tr>
-                <tr style="height: 22px;">
+                <tr style="height: 24px;">
                   <td style="background: #f8fafc; border-right: 1px solid #333; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">납품일시</td>
-                  <td style="padding: 4px 8px; font-weight: bold; white-space: nowrap;">${data.delivery_date || data.order_date}</td>
+                  <td style="padding: 4px 8px; font-size: 12px; font-weight: bold; white-space: nowrap;">${formattedDate}</td>
                 </tr>
               </table>
             </div>
 
-            <!-- 우측: 공급자 정보 (강북구청) -->
-            <div style="flex: 1.1; border: 1.5px solid #333; position: relative;">
+            <!-- 우측: 공급자 정보 -->
+            <div style="flex: 1; border: 1.5px solid #333;">
               <div style="background: #f1f5f9; text-align: center; font-weight: bold; font-size: 11px; padding: 3px; border-bottom: 1px solid #333; white-space: nowrap;">공 급 자 (납품업체)</div>
               <table style="width: 100%; font-size: 11px; border-collapse: collapse;">
-                <tr style="height: 20px;">
-                  <td style="width: 60px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px 6px; font-weight: bold; text-align: center; white-space: nowrap;">기관/상호</td>
-                  <td style="border-bottom: 1px solid #ccc; padding: 3px 8px; font-weight: bold; white-space: nowrap;">${sup.name || '강북구청'} <span style="font-size: 10px; font-weight: normal; color: #555;">(${sup.department || '지역경제과'})</span></td>
+                <tr style="height: 24px;">
+                  <td style="width: 65px; background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">기관/상호</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; font-size: 13px; font-weight: bold; white-space: nowrap;">${sup.name || '강북구청'}</td>
                 </tr>
-                <tr style="height: 20px;">
-                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px 6px; font-weight: bold; text-align: center; white-space: nowrap;">등록번호</td>
-                  <td style="border-bottom: 1px solid #ccc; padding: 3px 8px; white-space: nowrap;">${sup.biz_no || '210-83-02118'}</td>
+                <tr style="height: 24px;">
+                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">부 서 명</td>
+                  <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; font-size: 12px; font-weight: bold; white-space: nowrap;">${sup.department || '지역경제과'}</td>
                 </tr>
-                <tr style="height: 20px;">
-                  <td style="background: #f8fafc; border-right: 1px solid #333; border-bottom: 1px solid #ccc; padding: 3px 6px; font-weight: bold; text-align: center; white-space: nowrap;">업무담당</td>
-                  <td style="border-bottom: 1px solid #ccc; padding: 3px 8px; font-size: 10px; white-space: nowrap;">${sup.manager || '권준형 주무관'} <span style="color:#666;">(${sup.tel || '02-901-7256'})</span></td>
-                </tr>
-                <tr style="height: 20px;">
-                  <td style="background: #f8fafc; border-right: 1px solid #333; padding: 3px 6px; font-weight: bold; text-align: center; white-space: nowrap;">납품담당</td>
-                  <td style="padding: 3px 8px; font-size: 10px; font-weight: bold; white-space: nowrap;">${sup.delivery_manager || '박기남'} <span style="color:#666; font-weight: normal;">(${sup.delivery_tel || sup.tel || ''})</span></td>
+                <tr style="height: 24px;">
+                  <td style="background: #f8fafc; border-right: 1px solid #333; padding: 4px 6px; font-weight: bold; text-align: center; white-space: nowrap;">등록번호</td>
+                  <td style="padding: 4px 8px; font-size: 11px; white-space: nowrap;">${sup.biz_no || '210-83-02118'}</td>
                 </tr>
               </table>
             </div>
@@ -2947,11 +2958,11 @@
             <thead>
               <tr style="background: #f1f5f9; height: 26px;">
                 <th style="border: 1px solid #333; width: 35px; text-align: center; white-space: nowrap;">No</th>
-                <th style="border: 1px solid #333; text-align: center; white-space: nowrap;">품 목 명</th>
-                <th style="border: 1px solid #333; width: 75px; text-align: center; white-space: nowrap;">수량(g)</th>
-                <th style="border: 1px solid #333; width: 65px; text-align: center; white-space: nowrap;">단가(원)</th>
-                <th style="border: 1px solid #333; width: 85px; text-align: center; white-space: nowrap;">금액(원)</th>
-                <th style="border: 1px solid #333; width: 110px; text-align: center; white-space: nowrap;">비 고</th>
+                <th style="border: 1px solid #333; width: 140px; text-align: center; white-space: nowrap;">품 목 명</th>
+                <th style="border: 1px solid #333; width: 80px; text-align: center; white-space: nowrap;">수량(g)</th>
+                <th style="border: 1px solid #333; width: 70px; text-align: center; white-space: nowrap;">단가(원)</th>
+                <th style="border: 1px solid #333; width: 90px; text-align: center; white-space: nowrap;">금액(원)</th>
+                <th style="border: 1px solid #333; text-align: center; white-space: nowrap;">비 고</th>
               </tr>
             </thead>
             <tbody>
@@ -2960,9 +2971,9 @@
             <tfoot>
               <tr style="background: #fafafa; height: 28px; font-weight: bold;">
                 <td colspan="2" style="border: 1px solid #333; text-align: center; white-space: nowrap;">합 계</td>
-                <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap; font-size: 12px;">${data.formatted_total_qty}g</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 8px; white-space: nowrap; font-size: 12px;">${totalQtyDisplay}g</td>
                 <td style="border: 1px solid #333; text-align: center; white-space: nowrap;">총 공급액</td>
-                <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-size: 12px; color: #000; white-space: nowrap;">₩ ${data.formatted_total_amount}</td>
+                <td style="border: 1px solid #333; text-align: right; padding-right: 8px; font-size: 12px; color: #000; white-space: nowrap;">₩ ${totalAmountDisplay}</td>
                 <td style="border: 1px solid #333;"></td>
               </tr>
             </tfoot>
@@ -2972,14 +2983,14 @@
           <div style="border: 1.5px solid #333; padding: 6px 12px; display: flex; justify-content: space-between; align-items: center; background: #fff;">
             <div>
               <span style="font-size: 10px; color: #555;">합계 금액:</span>
-              <span style="font-size: 12px; font-weight: 800; margin-left: 6px;">일금 ${data.korean_amount} (₩ ${data.formatted_total_amount})</span>
+              <span style="font-size: 12px; font-weight: 800; margin-left: 6px;">일금 ${data.korean_amount} (₩ ${totalAmountDisplay})</span>
             </div>
             <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
               <span>위 물품을 정히 ${isSupplierCopy ? '영수(인수)' : '납품'}함.</span>
-              <span style="font-weight: bold; margin-left: 6px;">${isSupplierCopy ? '인수자(매장) :' : '납품자(공급자) :'}</span>
-              <span style="border-bottom: 1.5px solid #000; min-width: 130px; display: inline-flex; align-items: center; justify-content: flex-end; padding-bottom: 2px; position: relative;">
-                ${(!isSupplierCopy && sup.signature_image) ? `<img src="${sup.signature_image}" style="height: 26px; max-width: 70px; object-fit: contain; margin-right: 4px;" alt="직인">` : ''}
-                <span style="color: #444; font-size: 10px; margin-right: 2px;">(서명)</span>
+              <span style="font-weight: bold; margin-left: 6px;">${isSupplierCopy ? '인수자(매장) :' : '납품자 : ' + deliveryManagerName}</span>
+              <span style="border-bottom: 1.5px solid #000; min-width: 140px; display: inline-flex; align-items: center; justify-content: flex-end; padding-bottom: 2px; position: relative;">
+                ${(!isSupplierCopy && sup.signature_image) ? `<img src="${sup.signature_image}" style="position: absolute; right: 12px; bottom: -6px; height: 34px; max-width: 80px; object-fit: contain; pointer-events: none; z-index: 10;" alt="직인/싸인">` : ''}
+                <span style="color: #444; font-size: 10px; margin-right: 2px; position: relative; z-index: 5;">(서명)</span>
               </span>
             </div>
           </div>
@@ -2997,13 +3008,13 @@
         }
         const data = await res.json();
 
-        // 상단(공급자 보관용) + 절취선 + 하단(공급받는자 보관용)
+        // 상단(공급자 보관용) + 넉넉한 절취선 여백 + 하단(공급받는자 보관용)
         const fullHTML = `
           <!-- 1. 상단: 공급자 보관용 -->
           ${generateReceiptHTML(data, true)}
           
-          <!-- 중앙 단일 절취선 -->
-          <div style="text-align: center; margin: 4px 0; color: #555; font-size: 10px; font-weight: bold; letter-spacing: 2px;">
+          <!-- 중앙 단일 절취선 (여백 넉넉히 확보) -->
+          <div style="text-align: center; margin: 26px 0; padding: 6px 0; color: #777; font-size: 11px; font-weight: bold; letter-spacing: 3px;">
             ✂️ ------------------------------------ [ 절 취 선 ] ------------------------------------ ✂️
           </div>
 

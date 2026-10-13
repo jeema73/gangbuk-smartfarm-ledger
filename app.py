@@ -189,6 +189,7 @@ async def report_store_settlement(store_name: str, start_date: Optional[str] = N
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/reports/monthly-summary")
+@app.get("/api/monthly-summary")
 async def report_monthly_summary(year_month: Optional[str] = None, start_date: Optional[str] = None, end_date: Optional[str] = None):
     try:
         res = reports.get_monthly_summary_report(year_month=year_month, start_date=start_date, end_date=end_date)

@@ -185,6 +185,11 @@ def delete_store(store_name: str) -> Dict[str, Any]:
     db.collection("stores").document(store_name.strip()).delete()
     return {"success": True, "message": f"'{store_name}' 매장이 삭제되었습니다."}
 
+def get_store(store_name: str) -> Optional[Dict[str, Any]]:
+    db = get_db()
+    doc = db.collection("stores").document(store_name.strip()).get()
+    return doc.to_dict() if doc.exists else None
+
 # ========================================================
 # 4. 납품 주문 내역 (Orders)
 # ========================================================
@@ -420,6 +425,9 @@ def get_receipt_data(order_key: str) -> Dict[str, Any]:
     total_amt = int(round(order.get("total_amount", 0)))
     korean_amt = number_to_korean(total_amt)
 
+    total_qty = order.get("total_qty", 0)
+    formatted_total_qty = f"{total_qty:,.1f}".rstrip('0').rstrip('.') if total_qty else "0"
+
     return {
         "order_key": order.get("order_key", order_key),
         "order_date": order.get("order_date", ""),
@@ -427,7 +435,8 @@ def get_receipt_data(order_key: str) -> Dict[str, Any]:
         "store_name": store_name,
         "address": address,
         "items": order.get("items", []),
-        "total_qty": order.get("total_qty", 0),
+        "total_qty": total_qty,
+        "formatted_total_qty": formatted_total_qty,
         "total_amount": total_amt,
         "formatted_total_amount": f"{total_amt:,}",
         "korean_amount": korean_amt,
