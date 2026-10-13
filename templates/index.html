@@ -2987,11 +2987,21 @@
             </div>
             <div style="display: flex; align-items: center; gap: 8px; font-size: 11px;">
               <span>위 물품을 정히 ${isSupplierCopy ? '영수(인수)' : '납품'}함.</span>
-              <span style="font-weight: bold; margin-left: 6px;">${isSupplierCopy ? '인수자(매장) :' : '납품자 : ' + deliveryManagerName}</span>
-              <span style="border-bottom: 1.5px solid #000; min-width: 140px; display: inline-flex; align-items: center; justify-content: flex-end; padding-bottom: 2px; position: relative;">
-                ${(!isSupplierCopy && sup.signature_image) ? `<img src="${sup.signature_image}" style="position: absolute; right: 12px; bottom: -6px; height: 34px; max-width: 80px; object-fit: contain; pointer-events: none; z-index: 10;" alt="직인/싸인">` : ''}
-                <span style="color: #444; font-size: 10px; margin-right: 2px; position: relative; z-index: 5;">(서명)</span>
-              </span>
+              ${isSupplierCopy ? `
+                <span style="font-weight: bold; margin-left: 6px;">인수자(매장) :</span>
+                <span style="border-bottom: 1.5px solid #000; min-width: 140px; display: inline-flex; align-items: center; justify-content: flex-end; padding-bottom: 2px; position: relative;">
+                  <span style="color: #444; font-size: 10px; margin-right: 4px;">(서명)</span>
+                </span>
+              ` : `
+                <span style="font-weight: bold; margin-left: 6px;">납품자</span>
+                <span style="border-bottom: 1.5px solid #000; min-width: 170px; display: inline-flex; align-items: center; justify-content: space-between; padding: 0 4px 2px 8px; position: relative;">
+                  <span style="font-weight: bold; font-size: 11px; color: #000;">${deliveryManagerName}</span>
+                  <span style="position: relative; display: inline-flex; align-items: center;">
+                    ${sup.signature_image ? `<img src="${sup.signature_image}" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); height: 36px; max-width: 75px; object-fit: contain; pointer-events: none; z-index: 10;" alt="직인/싸인">` : ''}
+                    <span style="color: #444; font-size: 10px; position: relative; z-index: 5;">(서명)</span>
+                  </span>
+                </span>
+              `}
             </div>
           </div>
 
