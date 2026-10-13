@@ -189,39 +189,31 @@
       </div>
     </div>
     
-    <!-- 지브리 필 탭 메뉴 (모바일 가로 스크롤 대응) -->
-    <div class="max-w-6xl mx-auto px-2 sm:px-4 py-1.5 flex space-x-1 sm:space-x-2 border-t border-[#f0e8d9] overflow-x-auto no-scrollbar">
-      <button onclick="switchTab('register')" id="tab-register" class="tab-btn active">
-        <i class="fa-solid fa-seedling text-emerald-300"></i>
-        <span>신규 납품 <span class="hidden sm:inline">&amp; 즉시 인쇄</span></span>
-      </button>
-      <button onclick="switchTab('history')" id="tab-history" class="tab-btn">
-        <i class="fa-solid fa-clock-rotate-left"></i>
-        <span>최근 내역 <span class="hidden sm:inline">/ 재발행</span></span>
-      </button>
-      <button onclick="switchTab('stores')" id="tab-stores" class="tab-btn">
-        <i class="fa-solid fa-store"></i>
-        <span>협력업체 관리</span>
-      </button>
-      <button onclick="switchTab('crops')" id="tab-crops" class="tab-btn">
-        <i class="fa-solid fa-seedling"></i>
-        <span>작물/단가 관리</span>
-      </button>
-      <button onclick="switchTab('settlement')" id="tab-settlement" class="tab-btn">
-        <i class="fa-solid fa-receipt"></i>
-        <span>업체별 결재내역 <span class="hidden sm:inline">(인쇄)</span></span>
-      </button>
-      <button onclick="switchTab('summary')" id="tab-summary" class="tab-btn">
-        <i class="fa-solid fa-chart-pie"></i>
-        <span>월별 총괄 정산 <span class="hidden sm:inline">(인쇄)</span></span>
-      </button>
-      <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn">
-        <i class="fa-solid fa-file-invoice-dollar"></i>
-        <span>종합 리포트 센터 <span class="hidden sm:inline">(5종 리포트)</span></span>
-      </button>
-      <button onclick="switchTab('supplier')" id="tab-supplier" class="tab-btn">
-        <i class="fa-solid fa-sliders"></i>
-        <span>설정/공급자</span>
+    <!-- 지브리 감성 4대 핵심 업무 탭 메뉴 (PC 시원한 여백 & 모바일 최적화) -->
+    <div class="max-w-6xl mx-auto px-2 sm:px-4 py-2 flex items-center justify-between border-t border-[#f0e8d9] overflow-x-auto no-scrollbar gap-1.5">
+      <div class="flex space-x-1 sm:space-x-2">
+        <button onclick="switchTab('register')" id="tab-register" class="tab-btn active">
+          <i class="fa-solid fa-seedling text-emerald-300"></i>
+          <span>🌱 신규 납품등록</span>
+        </button>
+        <button onclick="switchTab('history')" id="tab-history" class="tab-btn">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span>📋 납품대장 관리</span>
+        </button>
+        <button onclick="switchTab('reports')" id="tab-reports" class="tab-btn">
+          <i class="fa-solid fa-file-invoice-dollar"></i>
+          <span>📊 종합 리포트 센터</span>
+        </button>
+        <button onclick="switchTab('manage')" id="tab-manage" class="tab-btn">
+          <i class="fa-solid fa-sliders"></i>
+          <span>⚙️ 기준정보·설정</span>
+        </button>
+      </div>
+      
+      <!-- 엑셀 다운로드 퀵 버튼 (상단 상시 노출) -->
+      <button onclick="downloadFilteredExcel()" class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#f4ece0] hover:bg-[#eae0cf] border border-[#d8cdb8] text-[#3d3326] rounded-full text-xs font-bold transition shadow-xs whitespace-nowrap active:scale-95" title="관공서 표준 납품대장 엑셀 다운로드">
+        <i class="fa-solid fa-file-excel text-emerald-600"></i>
+        <span>대장 엑셀받기(.xlsx)</span>
       </button>
     </div>
   </header>
@@ -436,410 +428,236 @@
       </div>
     </section>
 
-    <!-- 3. 협력업체(매장) 관리 탭 -->
-    <section id="view-stores" class="hidden space-y-6">
+    <!-- 3. 종합 리포트 센터 (5종 통합 리포트) -->
+    <section id="view-reports" class="hidden space-y-4">
       <div class="ghibli-card p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-              <i class="fa-solid fa-store text-[#3d7a5a]"></i> 4.19로 협력업체(매장) 관리
-            </h2>
-            <p class="text-xs text-[#716553] mt-0.5">스마트 온실 작물을 정기 납품받는 동네 협력 매장 목록입니다.</p>
-          </div>
-          <button onclick="openStoreModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95">
-            <i class="fa-solid fa-plus text-emerald-300"></i> + 신규 매장 추가
-          </button>
-        </div>
-
-        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
-          <table class="w-full text-left border-collapse text-sm min-w-[660px]">
-            <thead>
-              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
-                <th class="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
-                <th class="py-3 px-4 min-w-[140px] whitespace-nowrap">매장명(업소명)</th>
-                <th class="py-3 px-4 min-w-[240px]">소재지 (주소)</th>
-                <th class="py-3 px-4 min-w-[160px] whitespace-nowrap">대표 메뉴</th>
-                <th class="py-3 px-4 min-w-[100px] text-right whitespace-nowrap">가격</th>
-                <th class="py-3 px-4 min-w-[80px] text-center whitespace-nowrap">관리</th>
-              </tr>
-            </thead>
-            <tbody id="stores-table-body" class="divide-y divide-[#eee5d5]">
-              <!-- JS 동적 로드 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 4. 작물/품목 및 기본 단가 관리 탭 -->
-    <section id="view-crops" class="hidden space-y-6">
-      <div class="ghibli-card p-4 sm:p-6">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-              <i class="fa-solid fa-leaf text-[#3d7a5a]"></i> 스마트 온실 재배 작물 &amp; 공급단가 관리
-            </h2>
-            <p class="text-xs text-[#716553] mt-0.5">스마트팜 작물 품목을 등록하고 1g당 기본 공급단가를 설정합니다. 신규 납품 등록 시 자동 반영됩니다.</p>
-          </div>
-          <button onclick="openCropModal()" class="px-4 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-2xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
-            <i class="fa-solid fa-plus text-emerald-300"></i> + 신규 작물 품목 등록
-          </button>
-        </div>
-
-        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
-          <table class="w-full text-left border-collapse text-sm min-w-[680px]">
-            <thead>
-              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
-                <th class="py-3 px-4 w-12 text-center whitespace-nowrap">No</th>
-                <th class="py-3 px-4 min-w-[130px] whitespace-nowrap">작물(품목)명</th>
-                <th class="py-3 px-4 min-w-[100px] text-center whitespace-nowrap">분류</th>
-                <th class="py-3 px-4 min-w-[110px] text-right whitespace-nowrap">기본단가 (1g)</th>
-                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">100g 환산가</th>
-                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">1kg 환산가</th>
-                <th class="py-3 px-4 min-w-[180px]">비고 (용도/특징)</th>
-                <th class="py-3 px-4 min-w-[110px] text-center whitespace-nowrap">관리</th>
-              </tr>
-            </thead>
-            <tbody id="crops-table-body" class="divide-y divide-[#eee5d5]">
-              <!-- JS 동적 로드 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. 업체별 결재내역 & 인쇄 탭 -->
-    <section id="view-settlement" class="hidden space-y-6">
-      <div class="ghibli-card p-4 sm:p-6">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-              <i class="fa-solid fa-receipt text-[#d97736]"></i> 업체별 결재내역 &amp; 정산서 인쇄
-            </h2>
-            <p class="text-xs text-[#716553] mt-0.5">매장별 월별 또는 지정 기간 납품 내역을 취합하고 정식 결재내역서(A4)를 출력합니다.</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <select id="settle-store-select" class="px-3 py-2 text-xs ghibli-input font-medium" title="협력매장 선택">
-              <!-- JS 로 매장 목록 채움 -->
-            </select>
-            <!-- 월별 빠른 선택 -->
-            <select id="settle-month-select" onchange="onSettleMonthChange()" class="px-3 py-2 text-xs ghibli-input font-medium" title="월별 선택">
-              <option value="">전체 기간</option>
-              <option value="2026-10" selected>2026년 10월</option>
-              <option value="2026-09">2026년 9월</option>
-              <option value="2025-10">2025년 10월</option>
-              <option value="2025-09">2025년 9월</option>
-            </select>
-            <!-- 기간 직접 지정 -->
-            <div class="flex items-center gap-1 bg-[#fbf6ec] px-2 py-1 rounded-xl border border-[#e5dccb]">
-              <span class="text-[11px] text-[#716553] font-semibold">기간:</span>
-              <input type="date" id="settle-start-date" onchange="onSettleDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 시작일">
-              <span class="text-xs text-[#887a66]">~</span>
-              <input type="date" id="settle-end-date" onchange="onSettleDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 종료일">
-            </div>
-            <button onclick="loadStoreSettlement()" class="px-3.5 py-2 bg-[#42392d] hover:bg-[#322a20] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-              <i class="fa-solid fa-magnifying-glass"></i> 조회
+        <!-- 리포트 서브 탭 바 -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eee5d6] mb-4">
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto">
+            <button onclick="setReportSubType('crop-analytics')" id="sub-rep-crop-analytics" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#2d5a43] text-white shadow-xs">
+              📊 작물별 공급분석
             </button>
-            <button onclick="printStoreSettlement()" class="px-3.5 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
-              <i class="fa-solid fa-print"></i> 결재내역서 인쇄
+            <button onclick="setReportSubType('store-ranking')" id="sub-rep-store-ranking" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              🏆 매장별 납품순위
+            </button>
+            <button onclick="setReportSubType('daily-dispatch')" id="sub-rep-daily-dispatch" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              🚚 일자별 출고대장
+            </button>
+            <button onclick="setReportSubType('store-settlement')" id="sub-rep-store-settlement" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              🧾 매장별 결재서
+            </button>
+            <button onclick="setReportSubType('monthly-summary')" id="sub-rep-monthly-summary" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              📈 월별 총괄정산표
             </button>
           </div>
-        </div>
 
-        <!-- 요약 카드 (지브리 감성) -->
-        <div class="grid grid-cols-3 gap-3 mb-4 text-center">
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">납품 건수</span>
-            <span id="settle-summary-count" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0건</span>
-          </div>
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">총 공급량</span>
-            <span id="settle-summary-qty" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0 g</span>
-          </div>
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">총 결재금액</span>
-            <span id="settle-summary-amount" class="font-black text-[#2d5a43] text-base font-['Gowun_Dodum',sans-serif]">0 원</span>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
-          <table class="w-full text-left border-collapse text-sm min-w-[720px]">
-            <thead>
-              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
-                <th class="py-3 px-3 w-12 text-center whitespace-nowrap">No</th>
-                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">주문일자</th>
-                <th class="py-3 px-4 min-w-[130px] whitespace-nowrap">품목</th>
-                <th class="py-3 px-4 min-w-[100px] text-right whitespace-nowrap">단가(원)</th>
-                <th class="py-3 px-4 min-w-[100px] text-right whitespace-nowrap">수량(g)</th>
-                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">금액(원)</th>
-                <th class="py-3 px-4 min-w-[115px] text-center whitespace-nowrap">배송일자</th>
-                <th class="py-3 px-4 min-w-[140px]">비고</th>
-              </tr>
-            </thead>
-            <tbody id="settle-table-body" class="divide-y divide-[#eee5d5]">
-              <tr><td colspan="8" class="text-center py-8 text-[#887a66]">매장과 기간을 선택 후 [조회]를 눌러주세요.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 5. 월별/기간별 총괄 정산 & 집계표 인쇄 탭 -->
-    <section id="view-summary" class="hidden space-y-6">
-      <div class="ghibli-card p-4 sm:p-6">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-              <i class="fa-solid fa-chart-pie text-[#3d7a5a]"></i> 총괄 정산 &amp; 집계표 인쇄 (월별 / 기간별)
-            </h2>
-            <p class="text-xs text-[#716553] mt-0.5">전체 협력 매장의 월별 또는 기간별 마감 실적을 취합하고 공식 총괄 보고서(A4)를 출력합니다.</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- 월별 빠른 선택 -->
-            <select id="monthly-summary-select" onchange="onSummaryMonthChange()" class="px-3 py-2 text-xs ghibli-input font-medium" title="월별 선택">
-              <option value="">전체 기간</option>
-              <option value="2026-10" selected>2026년 10월</option>
-              <option value="2026-09">2026년 9월</option>
-              <option value="2025-10">2025년 10월</option>
-              <option value="2025-09">2025년 9월</option>
-            </select>
-            <!-- 기간 직접 지정 -->
-            <div class="flex items-center gap-1 bg-[#fbf6ec] px-2 py-1 rounded-xl border border-[#e5dccb]">
-              <span class="text-[11px] text-[#716553] font-semibold">기간:</span>
-              <input type="date" id="summary-start-date" onchange="onSummaryDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 시작일">
-              <span class="text-xs text-[#887a66]">~</span>
-              <input type="date" id="summary-end-date" onchange="onSummaryDateChange()" class="px-2 py-1 text-xs ghibli-input" title="조회 종료일">
-            </div>
-            <button onclick="loadMonthlySummary()" class="px-3.5 py-2 bg-[#42392d] hover:bg-[#322a20] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-              <i class="fa-solid fa-magnifying-glass"></i> 조회
-            </button>
-            <button onclick="printMonthlySummary()" class="px-4 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
-              <i class="fa-solid fa-print"></i> 총괄 집계표 인쇄
-            </button>
-          </div>
-        </div>
-
-        <!-- 4개 KPI 요약 (지브리 감성) -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-center">
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">총 납품 매장수</span>
-            <span id="monthly-total-stores" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0개소</span>
-          </div>
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">총 납품 횟수</span>
-            <span id="monthly-total-orders" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0건</span>
-          </div>
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">총 공급 중량</span>
-            <span id="monthly-total-qty" class="font-bold text-[#2b2721] text-base font-['Gowun_Dodum',sans-serif]">0 g</span>
-          </div>
-          <div class="bg-[#fbf7ee] p-3.5 rounded-2xl border border-[#e5dccb] shadow-xs">
-            <span class="text-xs text-[#7a6f5d] block font-medium">총 공급 금액</span>
-            <span id="monthly-total-amount" class="font-black text-[#2d5a43] text-base font-['Gowun_Dodum',sans-serif]">0 원</span>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
-          <table class="w-full text-left border-collapse text-sm min-w-[720px]">
-            <thead>
-              <tr class="bg-[#f4eee1] text-[#42382b] text-xs font-bold uppercase tracking-wider border-b border-[#e5dccb]">
-                <th class="py-3 px-3 w-12 text-center whitespace-nowrap">No</th>
-                <th class="py-3 px-4 min-w-[150px] whitespace-nowrap">협력 매장명</th>
-                <th class="py-3 px-4 min-w-[90px] text-center whitespace-nowrap">납품 횟수</th>
-                <th class="py-3 px-4 min-w-[120px] text-right whitespace-nowrap">총 공급량(g)</th>
-                <th class="py-3 px-4 min-w-[130px] text-right whitespace-nowrap">총 공급가액(원)</th>
-                <th class="py-3 px-4 min-w-[200px]">주요 납품 작물</th>
-              </tr>
-            </thead>
-            <tbody id="monthly-table-body" class="divide-y divide-[#eee5d5]">
-              <tr><td colspan="6" class="text-center py-8 text-[#887a66]">월을 선택 후 [조회]를 눌러주세요.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <!-- 6. 종합 리포트 센터 (5종 정렬/분석 리포트) -->
-    <section id="view-reports" class="hidden space-y-6">
-      <div class="ghibli-card p-4 sm:p-6">
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 border-b border-[#eee5d6] mb-4">
-          <div>
-            <h2 class="text-base sm:text-lg font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-              <i class="fa-solid fa-file-invoice-dollar text-[#2d5a43]"></i> 스마트팜 종합 리포트 센터
-            </h2>
-            <p class="text-xs text-[#716553] mt-0.5">매장별 결재, 월별 총괄, 작물별 공급 분석, 매장별 순위, 일자별 출고 대장을 자유롭게 조회하고 인쇄/엑셀로 출력합니다.</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- 리포트 종류 선택 -->
-            <select id="report-type-select" onchange="onReportTypeChange()" class="px-3 py-2 text-xs ghibli-input font-bold text-[#2d5a43] bg-[#edf6f0] border-[#c0dfcb]">
-              <option value="crop-analytics">📊 1. 작물별 공급 분석표 (매출/점유율/공급처)</option>
-              <option value="store-ranking">🏆 2. 협력매장 납품 순위표 (매출액순/물량순)</option>
-              <option value="daily-dispatch">🚚 3. 일자별 출고 대장 (시간순/일자별 묶음)</option>
-              <option value="store-settlement">🧾 4. 매장별 납품 결재서</option>
-              <option value="monthly-summary">📈 5. 월별/기간별 총괄 정산표</option>
-            </select>
-            <!-- 매장 선택 (매장 리포트용) -->
-            <select id="report-store-select" class="px-3 py-2 text-xs ghibli-input hidden font-medium" title="매장 선택">
-              <!-- JS 로 매장 목록 채움 -->
-            </select>
-            <!-- 월별 빠른 선택 -->
-            <select id="report-month-select" onchange="onReportMonthChange()" class="px-3 py-2 text-xs ghibli-input font-medium" title="월별 선택">
-              <option value="">전체 기간</option>
-            </select>
-            <!-- 기간 직접 지정 -->
-            <div class="flex items-center gap-1 bg-[#fbf6ec] px-2 py-1 rounded-xl border border-[#e5dccb]">
-              <span class="text-[11px] text-[#716553] font-semibold">기간:</span>
-              <input type="date" id="report-start-date" onchange="onReportDateChange()" class="px-2 py-1 text-xs ghibli-input" title="시작일">
-              <span class="text-xs text-[#887a66]">~</span>
-              <input type="date" id="report-end-date" onchange="onReportDateChange()" class="px-2 py-1 text-xs ghibli-input" title="종료일">
-            </div>
-            <button onclick="loadActiveReport()" class="px-3.5 py-2 bg-[#42392d] hover:bg-[#322a20] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-              <i class="fa-solid fa-magnifying-glass"></i> 조회
-            </button>
-            <button onclick="printActiveReport()" class="px-3.5 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
+          <div class="flex items-center gap-2">
+            <button onclick="printActiveReport()" class="px-3.5 py-1.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-sm active:scale-95 whitespace-nowrap">
               <i class="fa-solid fa-print"></i> 리포트 인쇄
             </button>
-            <button onclick="downloadFilteredExcel()" class="px-3.5 py-2 bg-[#f4ece0] hover:bg-[#e8decb] border border-[#d8cdb8] text-[#3d3326] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95 whitespace-nowrap" title="해당 기간 납품대장 엑셀 다운로드">
-              <i class="fa-solid fa-file-excel text-emerald-600"></i> 대장 엑셀받기
+            <button onclick="downloadFilteredExcel()" class="px-3.5 py-1.5 bg-[#f4ece0] hover:bg-[#e8decb] border border-[#d8cdb8] text-[#3d3326] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95 whitespace-nowrap">
+              <i class="fa-solid fa-file-excel text-emerald-600"></i> 대장 엑셀
             </button>
           </div>
+        </div>
+
+        <!-- 리포트 필터 바 -->
+        <div class="flex flex-wrap items-center gap-2 bg-[#fcf8f0] p-3 rounded-2xl border border-[#ece4d4] mb-4">
+          <input type="hidden" id="report-type-select" value="crop-analytics">
+          <!-- 매장 선택 (매장별 결재서 선택시 표시) -->
+          <select id="report-store-select" class="px-3 py-1.5 text-xs ghibli-input hidden font-medium" title="매장 선택" onchange="loadActiveReport()">
+            <!-- JS 동적 로드 -->
+          </select>
+          <!-- 월별 선택 -->
+          <select id="report-month-select" onchange="onReportMonthChange()" class="px-3 py-1.5 text-xs ghibli-input font-medium" title="월별 선택">
+            <option value="">전체 기간</option>
+          </select>
+          <!-- 기간 직접 지정 -->
+          <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-[#ded5c3]">
+            <span class="text-[11px] text-[#716553] font-semibold">직접지정:</span>
+            <input type="date" id="report-start-date" onchange="onReportDateChange()" class="px-1.5 py-0.5 text-xs border-0 focus:outline-none" title="시작일">
+            <span class="text-xs text-[#887a66]">~</span>
+            <input type="date" id="report-end-date" onchange="onReportDateChange()" class="px-1.5 py-0.5 text-xs border-0 focus:outline-none" title="종료일">
+          </div>
+          <button onclick="loadActiveReport()" class="px-3.5 py-1.5 bg-[#42392d] hover:bg-[#322a20] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
+            <i class="fa-solid fa-magnifying-glass"></i> 조회
+          </button>
         </div>
 
         <!-- 리포트 KPI 요약 카드 -->
-        <div id="report-kpi-container" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4 text-center">
-          <div class="bg-[#fbf7ee] p-3 rounded-2xl border border-[#e5dccb]">
-            <span class="text-[11px] text-[#7a6f5d] block font-medium">조회 기간</span>
+        <div id="report-kpi-container" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-4 text-center">
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">조회 기간</span>
             <span id="rep-kpi-period" class="font-bold text-[#2d5a43] text-sm">전체 기간</span>
           </div>
-          <div class="bg-[#fbf7ee] p-3 rounded-2xl border border-[#e5dccb]">
-            <span class="text-[11px] text-[#7a6f5d] block font-medium">항목수 / 건수</span>
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">항목수 / 건수</span>
             <span id="rep-kpi-count" class="font-bold text-[#2b2721] text-sm">0</span>
           </div>
-          <div class="bg-[#fbf7ee] p-3 rounded-2xl border border-[#e5dccb]">
-            <span class="text-[11px] text-[#7a6f5d] block font-medium">총 공급량</span>
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">총 공급량</span>
             <span id="rep-kpi-qty" class="font-bold text-[#2b2721] text-sm">0 g</span>
           </div>
-          <div class="bg-[#fbf7ee] p-3 rounded-2xl border border-[#e5dccb]">
-            <span class="text-[11px] text-[#7a6f5d] block font-medium">총 공급금액</span>
+          <div class="bg-[#fbf7ee] p-2.5 rounded-xl border border-[#e5dccb]">
+            <span class="text-[11px] text-[#7a6f5d] block">총 공급금액</span>
             <span id="rep-kpi-amount" class="font-black text-[#2d5a43] text-sm">0 원</span>
           </div>
         </div>
 
         <!-- 리포트 데이터 테이블 렌더링 컨테이너 -->
         <div id="report-table-wrapper" class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
-          <!-- 동적 표 생성 -->
           <div class="p-8 text-center text-[#887a66]">상단에서 리포트 종류와 기간을 선택 후 [조회]를 눌러주세요.</div>
         </div>
       </div>
     </section>
 
-    <!-- 7. 공급자(강북구청) 정보 설정 탭 -->
-    <section id="view-supplier" class="hidden space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-        
-        <!-- 좌측: 공급자 정보 -->
-        <div class="ghibli-card p-5 sm:p-6">
-          <div class="pb-3 border-b border-[#eee5d6] mb-4">
-            <h2 class="text-base font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-              <i class="fa-solid fa-landmark text-[#3d7a5a]"></i> 공급자(강북구청) 정보 설정
-            </h2>
-            <p class="text-xs text-[#716553] mt-0.5">납품확인서/정산서에 기재되는 기관 기본 정보입니다.</p>
-          </div>
-
-          <form onsubmit="saveSupplierSettings(event)" class="space-y-3.5">
-            <div>
-              <label class="block text-xs font-bold text-[#574c3e] mb-1">상호 / 기관명 *</label>
-              <input type="text" id="sup-name" required class="w-full px-3 py-2.5 ghibli-input text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-[#574c3e] mb-1">부서명 / 사업단</label>
-              <input type="text" id="sup-department" class="w-full px-3 py-2.5 ghibli-input text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-[#574c3e] mb-1">고유번호 / 사업자번호</label>
-              <input type="text" id="sup-biz-no" class="w-full px-3 py-2.5 ghibli-input text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-[#574c3e] mb-1">소재지 (주소)</label>
-              <input type="text" id="sup-address" class="w-full px-3 py-2.5 ghibli-input text-sm">
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-[#574c3e] mb-1">업무담당자 (구청)</label>
-                <input type="text" id="sup-manager" placeholder="예: 권준형 주무관" class="w-full px-3 py-2.5 ghibli-input text-sm">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-[#574c3e] mb-1">업무 연락처</label>
-                <input type="text" id="sup-tel" placeholder="예: 02-901-7256" class="w-full px-3 py-2.5 ghibli-input text-sm">
-              </div>
-            </div>
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-[#574c3e] mb-1">납품담당자 (현장배송)</label>
-                <input type="text" id="sup-delivery-manager" placeholder="예: 박기남" class="w-full px-3 py-2.5 ghibli-input text-sm">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-[#574c3e] mb-1">납품 연락처</label>
-                <input type="text" id="sup-delivery-tel" placeholder="예: 010-0000-0000" class="w-full px-3 py-2.5 ghibli-input text-sm">
-              </div>
-            </div>
-            <!-- 작은 싸인/직인 이미지 등록 -->
-            <div class="border border-[#e7dfce] bg-[#faf6ed] rounded-2xl p-3">
-              <label class="block text-xs font-bold text-[#574c3e] mb-1">
-                <i class="fa-solid fa-stamp text-[#d97736]"></i> 납품/영수 서명 직인 이미지 (자동 삽입)
-              </label>
-              <div class="flex items-center gap-3">
-                <div class="w-16 h-16 border-2 border-dashed border-[#ccc1ad] rounded-xl flex items-center justify-center bg-white overflow-hidden shrink-0" id="sign-preview-box">
-                  <img id="sup-signature-preview" src="" alt="서명 미리보기" class="max-h-full max-w-full hidden object-contain">
-                  <span id="sign-placeholder" class="text-[10px] text-[#a89c8a] text-center">직인/싸인<br>미등록</span>
-                </div>
-                <div class="flex-1">
-                  <input type="file" id="sup-signature-file" accept="image/*" onchange="handleSignatureFile(event)" class="text-xs text-[#716553] file:mr-2 file:py-1 file:px-2.5 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-[#2d5a43] file:text-white cursor-pointer">
-                  <p class="text-[10px] text-[#8e8270] mt-1">투명 배경 PNG 또는 JPG 이미지 등록 시 납품확인서 서명란에 자동 날인됩니다.</p>
-                  <button type="button" onclick="removeSignatureImage()" id="btn-remove-sign" class="text-[11px] text-red-600 hover:underline mt-0.5 hidden">서명 이미지 삭제</button>
-                </div>
-              </div>
-              <input type="hidden" id="sup-signature-image" value="">
-            </div>
-            <div class="pt-2 flex justify-end">
-              <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] hover:to-[#2e5f44] text-white font-bold rounded-2xl text-sm transition shadow-sm text-center active:scale-95">
-                <i class="fa-solid fa-check mr-1 text-emerald-300"></i> 공급자 정보 저장
-              </button>
-            </div>
-          </form>
+    <!-- 4. 기준정보 및 시스템 설정 (서브 탭: 매장 / 작물단가 / 공급자설정) -->
+    <section id="view-manage" class="hidden space-y-4">
+      <div class="ghibli-card p-4 sm:p-6">
+        <!-- 설정 서브 탭 바 -->
+        <div class="flex items-center gap-1.5 pb-3 border-b border-[#eee5d6] mb-4 overflow-x-auto no-scrollbar">
+          <button onclick="setManageSubType('stores')" id="sub-manage-stores" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-[#2d5a43] text-white shadow-xs">
+            🏪 협력업체(매장) 관리
+          </button>
+          <button onclick="setManageSubType('crops')" id="sub-manage-crops" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+            🌿 재배작물 &amp; 기본단가 관리
+          </button>
+          <button onclick="setManageSubType('supplier')" id="sub-manage-supplier" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+            🏛️ 공급자·담당자·직인 설정
+          </button>
         </div>
 
-        <!-- 우측: 최신 엑셀 파일 업로드 -->
-        <div class="ghibli-card p-5 sm:p-6 flex flex-col justify-between">
-          <div>
-            <div class="pb-3 border-b border-[#eee5d6] mb-4">
-              <h2 class="text-base font-bold text-[#26211a] font-['Gowun_Dodum',sans-serif] flex items-center gap-2">
-                <i class="fa-solid fa-file-excel text-[#2d5a43]"></i> 최신 엑셀 파일 업로드 / 교체
-              </h2>
-              <p class="text-xs text-[#716553] mt-0.5">최신 납품대장 엑셀 파일을 업로드합니다.</p>
+        <!-- 서브 1: 매장 관리 -->
+        <div id="manage-sub-stores" class="space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-sm text-[#26211a] font-['Gowun_Dodum',sans-serif]">4.19로 협력 매장 목록</h3>
+              <p class="text-xs text-[#716553]">스마트 온실 작물을 정기 납품받는 동네 협력 매장 목록입니다.</p>
             </div>
-
-            <div class="bg-[#f0f8f2] border border-[#cbe5d2] rounded-2xl p-4 mb-4 text-xs text-[#315740] leading-relaxed shadow-xs">
-              <p class="font-bold text-[#1f4a30] mb-1 flex items-center gap-1.5">
-                <i class="fa-solid fa-shield-heart text-[#3d7a5a]"></i> 안전한 자동 백업 시스템
-              </p>
-              새 엑셀 파일을 업로드하시면 기존 파일은 <code class="bg-white px-1.5 py-0.5 rounded-md border border-[#c0dfc7] text-[#1c482d] font-bold">backups/</code> 폴더에 시간별로 안전하게 자동 보관되며, 시스템 전체가 최신 데이터로 즉시 전환됩니다.
-            </div>
-
-            <div class="border-2 border-dashed border-[#ded2bd] rounded-3xl p-6 text-center hover:border-[#3d7a5a] transition bg-[#faf5eb]">
-              <i class="fa-solid fa-cloud-arrow-up text-3xl text-[#b0a18c] mb-2"></i>
-              <p class="text-xs font-bold text-[#5c5040] mb-3">최신 '납품대장.xlsx' 파일을 선택하세요</p>
-              <input type="file" id="excel-file-input" accept=".xlsx" class="block w-full text-xs text-[#6e614f] file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#2d5a43] file:text-white hover:file:bg-[#234935] cursor-pointer">
-            </div>
-          </div>
-
-          <div class="pt-4">
-            <button onclick="handleExcelUpload()" class="w-full py-2.5 bg-[#42392d] hover:bg-[#322a20] text-white font-bold rounded-2xl text-sm transition shadow-sm flex items-center justify-center gap-2 active:scale-95">
-              <i class="fa-solid fa-upload text-amber-300"></i> 최신 엑셀 파일 적용하기
+            <button onclick="openStoreModal()" class="px-3.5 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs active:scale-95 w-fit">
+              <i class="fa-solid fa-plus text-emerald-300"></i> + 신규 매장 추가
             </button>
           </div>
+          <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+            <table class="w-full text-left border-collapse text-xs min-w-[660px]">
+              <thead>
+                <tr class="bg-[#f4eee1] text-[#42382b] font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                  <th class="py-2.5 px-3 w-12 text-center">No</th>
+                  <th class="py-2.5 px-3 min-w-[140px]">매장명(업소명)</th>
+                  <th class="py-2.5 px-3 min-w-[240px]">소재지 (주소)</th>
+                  <th class="py-2.5 px-3 min-w-[150px]">대표 메뉴</th>
+                  <th class="py-2.5 px-3 min-w-[90px] text-right">가격</th>
+                  <th class="py-2.5 px-3 min-w-[90px] text-center">관리</th>
+                </tr>
+              </thead>
+              <tbody id="stores-table-body" class="divide-y divide-[#eee5d5]"></tbody>
+            </table>
+          </div>
         </div>
 
+        <!-- 서브 2: 작물 및 단가 관리 -->
+        <div id="manage-sub-crops" class="hidden space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div>
+              <h3 class="font-bold text-sm text-[#26211a] font-['Gowun_Dodum',sans-serif]">스마트팜 재배 작물 &amp; 공급 단가</h3>
+              <p class="text-xs text-[#716553]">작물 품목을 등록하고 1g당 기본 공급단가를 설정합니다. 신규 납품 등록 시 자동 반영됩니다.</p>
+            </div>
+            <button onclick="openCropModal()" class="px-3.5 py-2 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs active:scale-95 w-fit">
+              <i class="fa-solid fa-plus text-emerald-300"></i> + 신규 작물 품목 등록
+            </button>
+          </div>
+          <div class="overflow-x-auto border border-[#e5dccb] rounded-2xl bg-white shadow-xs">
+            <table class="w-full text-left border-collapse text-xs min-w-[680px]">
+              <thead>
+                <tr class="bg-[#f4eee1] text-[#42382b] font-bold uppercase tracking-wider border-b border-[#e5dccb]">
+                  <th class="py-2.5 px-3 w-12 text-center">No</th>
+                  <th class="py-2.5 px-3 min-w-[130px]">작물(품목)명</th>
+                  <th class="py-2.5 px-3 min-w-[90px] text-center">분류</th>
+                  <th class="py-2.5 px-3 min-w-[100px] text-right">기본단가 (1g)</th>
+                  <th class="py-2.5 px-3 min-w-[110px] text-right">100g 환산가</th>
+                  <th class="py-2.5 px-3 min-w-[110px] text-right">1kg 환산가</th>
+                  <th class="py-2.5 px-3 min-w-[160px]">비고 (용도/특징)</th>
+                  <th class="py-2.5 px-3 min-w-[90px] text-center">관리</th>
+                </tr>
+              </thead>
+              <tbody id="crops-table-body" class="divide-y divide-[#eee5d5]"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 서브 3: 공급자 및 담당자 / 직인 설정 -->
+        <div id="manage-sub-supplier" class="hidden space-y-4">
+          <div class="max-w-2xl mx-auto bg-white p-5 rounded-2xl border border-[#e5dccb] shadow-xs">
+            <h3 class="font-bold text-sm text-[#26211a] font-['Gowun_Dodum',sans-serif] mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-landmark text-[#3d7a5a]"></i> 공급자(강북구청) 정보 &amp; 서명직인 설정
+            </h3>
+            <p class="text-xs text-[#716553] mb-4">납품확인서/정산서에 기재되는 기관 기본 정보 및 자동 날인 직인을 관리합니다.</p>
+            
+            <form onsubmit="saveSupplierSettings(event)" class="space-y-3">
+              <div>
+                <label class="block text-xs font-bold text-[#574c3e] mb-1">상호 / 기관명 *</label>
+                <input type="text" id="sup-name" required class="w-full px-3 py-2 ghibli-input text-xs">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-[#574c3e] mb-1">부서명 / 사업단</label>
+                <input type="text" id="sup-department" class="w-full px-3 py-2 ghibli-input text-xs">
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-[#574c3e] mb-1">고유번호 / 사업자번호</label>
+                  <input type="text" id="sup-biz-no" class="w-full px-3 py-2 ghibli-input text-xs">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#574c3e] mb-1">소재지 (주소)</label>
+                  <input type="text" id="sup-address" class="w-full px-3 py-2 ghibli-input text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-[#574c3e] mb-1">업무담당자 (구청)</label>
+                  <input type="text" id="sup-manager" placeholder="권준형 주무관" class="w-full px-3 py-2 ghibli-input text-xs">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#574c3e] mb-1">업무 연락처</label>
+                  <input type="text" id="sup-tel" placeholder="02-901-7256" class="w-full px-3 py-2 ghibli-input text-xs">
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-[#574c3e] mb-1">납품담당자 (현장배송)</label>
+                  <input type="text" id="sup-delivery-manager" placeholder="박기남" class="w-full px-3 py-2 ghibli-input text-xs">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-[#574c3e] mb-1">납품 연락처</label>
+                  <input type="text" id="sup-delivery-tel" placeholder="010-0000-0000" class="w-full px-3 py-2 ghibli-input text-xs">
+                </div>
+              </div>
+              <!-- 직인 / 서명 이미지 등록 -->
+              <div class="border border-[#e7dfce] bg-[#faf6ed] rounded-xl p-3">
+                <label class="block text-xs font-bold text-[#574c3e] mb-1">
+                  <i class="fa-solid fa-stamp text-[#d97736]"></i> 납품/영수 서명 직인 이미지 (자동 삽입)
+                </label>
+                <div class="flex items-center gap-3">
+                  <div class="w-14 h-14 border-2 border-dashed border-[#ccc1ad] rounded-xl flex items-center justify-center bg-white overflow-hidden shrink-0" id="sign-preview-box">
+                    <img id="sup-signature-preview" src="" alt="서명 미리보기" class="max-h-full max-w-full hidden object-contain">
+                    <span id="sign-placeholder" class="text-[10px] text-[#a89c8a] text-center">직인/싸인<br>미등록</span>
+                  </div>
+                  <div class="flex-1">
+                    <input type="file" id="sup-signature-file" accept="image/*" onchange="handleSignatureFile(event)" class="text-xs text-[#716553] file:mr-2 file:py-1 file:px-2.5 file:rounded-xl file:border-0 file:text-[11px] file:font-bold file:bg-[#2d5a43] file:text-white cursor-pointer">
+                    <p class="text-[10px] text-[#8e8270] mt-1">투명 배경 PNG 또는 JPG 등록 시 납품확인서 서명란에 자동 날인됩니다.</p>
+                    <button type="button" onclick="removeSignatureImage()" id="btn-remove-sign" class="text-[11px] text-red-600 hover:underline mt-0.5 hidden">서명 이미지 삭제</button>
+                  </div>
+                </div>
+                <input type="hidden" id="sup-signature-image" value="">
+              </div>
+              <div class="pt-2">
+                <button type="submit" class="w-full py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white font-bold rounded-xl text-xs transition shadow-sm text-center active:scale-95">
+                  <i class="fa-solid fa-check mr-1 text-emerald-300"></i> 공급자 정보 저장
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -1108,40 +926,99 @@
       }
     }
 
-    // 탭 전환 (7개 탭 지원)
+    // 4대 핵심 탭 전환 ('register', 'history', 'reports', 'manage')
     function switchTab(tab) {
-      const allTabs = ['register', 'history', 'stores', 'crops', 'settlement', 'summary', 'reports', 'supplier'];
+      const allTabs = ['register', 'history', 'reports', 'manage'];
       allTabs.forEach(t => {
         const viewEl = document.getElementById(`view-${t}`);
         const tabBtn = document.getElementById(`tab-${t}`);
         if (viewEl) viewEl.classList.add('hidden');
         if (tabBtn) {
-          tabBtn.classList.remove('active', 'text-slate-900');
-          tabBtn.classList.add('text-slate-500');
+          tabBtn.classList.remove('active');
         }
       });
 
       const activeView = document.getElementById(`view-${tab}`);
       const activeBtn = document.getElementById(`tab-${tab}`);
       if (activeView) activeView.classList.remove('hidden');
-      if (activeBtn) {
-        activeBtn.classList.add('active', 'text-slate-900');
-        activeBtn.classList.remove('text-slate-500');
-      }
+      if (activeBtn) activeBtn.classList.add('active');
 
       if (tab === 'history') loadOrdersHistory();
-      if (tab === 'stores') loadStoresList();
-      if (tab === 'crops') loadCropsList();
-      if (tab === 'settlement') loadStoreSettlement();
-      if (tab === 'summary') loadMonthlySummary();
       if (tab === 'reports') loadActiveReport();
+      if (tab === 'manage') loadStoresList();
+    }
+
+    // 리포트 센터 서브 탭 전환
+    function setReportSubType(subType) {
+      document.getElementById('report-type-select').value = subType;
+      const subButtons = ['crop-analytics', 'store-ranking', 'daily-dispatch', 'store-settlement', 'monthly-summary'];
+      subButtons.forEach(b => {
+        const btn = document.getElementById(`sub-rep-${b}`);
+        if (btn) {
+          if (b === subType) {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#2d5a43] text-white shadow-xs";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]";
+          }
+        }
+      });
+
+      const storeSelect = document.getElementById("report-store-select");
+      if (subType === "store-settlement") {
+        storeSelect.classList.remove("hidden");
+      } else {
+        storeSelect.classList.add("hidden");
+      }
+      loadActiveReport();
+    }
+
+    // 기준정보 관리 서브 탭 전환 (stores, crops, supplier)
+    function setManageSubType(subType) {
+      const subSections = ['stores', 'crops', 'supplier'];
+      subSections.forEach(s => {
+        const sec = document.getElementById(`manage-sub-${s}`);
+        const btn = document.getElementById(`sub-manage-${s}`);
+        if (sec) {
+          if (s === subType) sec.classList.remove('hidden');
+          else sec.classList.add('hidden');
+        }
+        if (btn) {
+          if (s === subType) {
+            btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-[#2d5a43] text-white shadow-xs";
+          } else {
+            btn.className = "px-3.5 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]";
+          }
+        }
+      });
+
+      if (subType === 'stores') loadStoresList();
+      if (subType === 'crops') loadCropsList();
     }
 
     // 메타데이터 불러오기
     async function loadMeta() {
       try {
         const res = await fetch('/api/meta');
-        metaData = await res.json();
+        const rawMeta = await res.json();
+        
+        // 작물 데이터가 리스트로 오는 경우 name -> unit_price 맵으로 정규화
+        const cropMap = {};
+        if (Array.isArray(rawMeta.crops)) {
+          rawMeta.crops.forEach(c => {
+            if (c && c.name) {
+              cropMap[c.name] = Number(c.unit_price) || 0;
+            }
+          });
+        } else if (rawMeta.crops && typeof rawMeta.crops === 'object') {
+          Object.assign(cropMap, rawMeta.crops);
+        }
+
+        metaData = {
+          stores: Array.isArray(rawMeta.stores) ? rawMeta.stores : [],
+          crops: cropMap,
+          cropsList: Array.isArray(rawMeta.crops) ? rawMeta.crops : [],
+          supplier: rawMeta.supplier || {}
+        };
         
         // 1. 주문등록 매장 드롭다운 채우기
         const storeSelect = document.getElementById("store-select");
@@ -1242,16 +1119,26 @@
       tr.id = `item-row-${rowIdCounter}`;
       tr.className = "hover:bg-[#fbf7ee] transition-colors";
 
-      const cropsOptions = Object.keys(metaData.crops).map(c => {
-        let icon = "🌱";
-        if (c.includes("루꼴라")) icon = "🌿";
-        if (c.includes("바질")) icon = "🍃";
-        if (c.includes("민트")) icon = "🪴";
-        if (c.includes("버터헤드") || c.includes("상추")) icon = "🥬";
-        return `<option value="${c}" ${c === defaultCrop ? 'selected' : ''}>${icon} ${c} (${metaData.crops[c]}원/g)</option>`;
-      }).join('') + `<option value="__CUSTOM__">✏️ 기타(직접입력)</option>`;
+      const cropsList = Object.keys(metaData.crops);
+      const selectedCrop = (cropsList.includes(defaultCrop)) ? defaultCrop : (cropsList.length > 0 ? cropsList[0] : "루꼴라");
 
-      const initPrice = metaData.crops[defaultCrop] || 0;
+      let cropsOptions = "";
+      if (cropsList.length > 0) {
+        cropsOptions = cropsList.map(c => {
+          let icon = "🌱";
+          if (c.includes("루꼴라")) icon = "🌿";
+          if (c.includes("바질")) icon = "🍃";
+          if (c.includes("민트")) icon = "🪴";
+          if (c.includes("버터헤드") || c.includes("상추")) icon = "🥬";
+          const p = metaData.crops[c] ?? 0;
+          return `<option value="${c}" ${c === selectedCrop ? 'selected' : ''}>${icon} ${c} (${p}원/g)</option>`;
+        }).join('');
+      } else {
+        cropsOptions = `<option value="루꼴라" selected>🌿 루꼴라 (17.7원/g)</option><option value="바질">🍃 바질 (34.5원/g)</option>`;
+      }
+      cropsOptions += `<option value="__CUSTOM__">✏️ 기타(직접입력)</option>`;
+
+      const initPrice = metaData.crops[selectedCrop] || (selectedCrop === "바질" ? 34.5 : 17.7);
 
       tr.innerHTML = `
         <td class="py-3 px-3 text-center text-xs text-[#9c8e7c] font-bold row-no"></td>
