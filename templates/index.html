@@ -2167,7 +2167,7 @@
               <div style="font-size: 11px; color: #555; margin-top: 2px; white-space: nowrap;">( 업 체 별  결 재 내 역 서 )</div>
             </div>
             <div style="text-align: right; font-size: 10px; color: #444; white-space: nowrap;">
-              <div>정산대상월: <b>${data.year_month}</b></div>
+              <div>정산대상: <b>${data.period_label || data.year_month || '전체 기간'}</b></div>
               <div>출력일시: ${new Date().toLocaleDateString('ko-KR')}</div>
             </div>
           </div>
@@ -2188,7 +2188,7 @@
                 </tr>
                 <tr>
                   <td style="background: #f8fafc; border-right: 1px solid #333; padding: 4px; font-weight: bold; text-align: center; white-space: nowrap;">정산기간</td>
-                  <td style="padding: 4px 8px; white-space: nowrap;">${data.year_month} (${data.total_count}건 납품)</td>
+                  <td style="padding: 4px 8px; white-space: nowrap;">${data.period_label || data.year_month || '전체 기간'} (${data.total_count}건 납품)</td>
                 </tr>
               </table>
             </div>

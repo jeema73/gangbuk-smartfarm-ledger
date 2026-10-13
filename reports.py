@@ -86,6 +86,7 @@ def get_store_settlement_report(
         "store_name": store_name,
         "store_address": store_addr,
         "period_label": period_label,
+        "year_month": period_label,
         "items": filtered_items,
         "total_count": len(filtered_items),
         "total_qty": round(total_qty, 1),

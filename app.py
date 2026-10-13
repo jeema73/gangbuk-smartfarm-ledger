@@ -181,6 +181,7 @@ async def get_receipt(order_key: str):
 # 3. 리포트 엔진 (정산서, 월별총괄, 작물분석, 순위, 일자별출고)
 # ========================================================
 @app.get("/api/reports/store-settlement")
+@app.get("/api/settlement")
 async def report_store_settlement(store_name: str, start_date: Optional[str] = None, end_date: Optional[str] = None, year_month: Optional[str] = None):
     try:
         res = reports.get_store_settlement_report(store_name=store_name, start_date=start_date, end_date=end_date, year_month=year_month)
