@@ -435,20 +435,20 @@
         <!-- 리포트 서브 탭 바 -->
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#eee5d6] mb-4">
           <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar w-full sm:w-auto">
-            <button onclick="setReportSubType('crop-analytics')" id="sub-rep-crop-analytics" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#2d5a43] text-white shadow-xs">
-              📊 작물별 공급분석
-            </button>
-            <button onclick="setReportSubType('store-ranking')" id="sub-rep-store-ranking" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
-              🏆 매장별 납품순위
-            </button>
-            <button onclick="setReportSubType('daily-dispatch')" id="sub-rep-daily-dispatch" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
-              🚚 일자별 출고대장
+            <button onclick="setReportSubType('monthly-summary')" id="sub-rep-monthly-summary" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#2d5a43] text-white shadow-xs">
+              📈 월별 총괄정산표
             </button>
             <button onclick="setReportSubType('store-settlement')" id="sub-rep-store-settlement" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
               🧾 매장별 결재서
             </button>
-            <button onclick="setReportSubType('monthly-summary')" id="sub-rep-monthly-summary" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
-              📈 월별 총괄정산표
+            <button onclick="setReportSubType('daily-dispatch')" id="sub-rep-daily-dispatch" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              🚚 일자별 출고대장
+            </button>
+            <button onclick="setReportSubType('store-ranking')" id="sub-rep-store-ranking" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              🏆 매장별 납품순위
+            </button>
+            <button onclick="setReportSubType('crop-analytics')" id="sub-rep-crop-analytics" class="px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#f0e7d7] text-[#4d4235] hover:bg-[#e4d9c6]">
+              📊 작물별 공급분석
             </button>
           </div>
 
@@ -464,7 +464,7 @@
 
         <!-- 리포트 필터 바 -->
         <div class="flex flex-wrap items-center gap-2 bg-[#fcf8f0] p-3 rounded-2xl border border-[#ece4d4] mb-4">
-          <input type="hidden" id="report-type-select" value="crop-analytics">
+          <input type="hidden" id="report-type-select" value="monthly-summary">
           <!-- 매장 선택 (매장별 결재서 선택시 표시) -->
           <select id="report-store-select" class="px-3 py-1.5 text-xs ghibli-input hidden font-medium" title="매장 선택" onchange="loadActiveReport()">
             <!-- JS 동적 로드 -->
@@ -968,30 +968,34 @@
 
       const filterMonth = document.getElementById("filter-month");
       if (filterMonth) {
-        filterMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
-          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        filterMonth.innerHTML = '<option value="">전체 기간</option>' + months.map(m => 
+          `<option value="${m.ym}">${m.label}</option>`
         ).join('');
+        filterMonth.value = currentYM; // 최근 내역 기본 해당월 선택
       }
 
       const settleMonth = document.getElementById("settle-month-select");
       if (settleMonth) {
-        settleMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
-          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        settleMonth.innerHTML = '<option value="">전체 기간</option>' + months.map(m => 
+          `<option value="${m.ym}">${m.label}</option>`
         ).join('');
+        settleMonth.value = currentYM;
       }
 
       const summaryMonth = document.getElementById("monthly-summary-select");
       if (summaryMonth) {
-        summaryMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
-          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        summaryMonth.innerHTML = '<option value="">전체 기간</option>' + months.map(m => 
+          `<option value="${m.ym}">${m.label}</option>`
         ).join('');
+        summaryMonth.value = currentYM;
       }
 
       const reportMonth = document.getElementById("report-month-select");
       if (reportMonth) {
-        reportMonth.innerHTML = '<option value="">전체 기간</option>' + months.map((m, idx) => 
-          `<option value="${m.ym}" ${idx === 0 ? 'selected' : ''}>${m.label}</option>`
+        reportMonth.innerHTML = '<option value="">전체 기간</option>' + months.map(m => 
+          `<option value="${m.ym}">${m.label}</option>`
         ).join('');
+        reportMonth.value = currentYM; // 리포트 센터 기본 해당월 선택
       }
     }
 
@@ -1020,7 +1024,7 @@
     // 리포트 센터 서브 탭 전환
     function setReportSubType(subType) {
       document.getElementById('report-type-select').value = subType;
-      const subButtons = ['crop-analytics', 'store-ranking', 'daily-dispatch', 'store-settlement', 'monthly-summary'];
+      const subButtons = ['monthly-summary', 'store-settlement', 'daily-dispatch', 'store-ranking', 'crop-analytics'];
       subButtons.forEach(b => {
         const btn = document.getElementById(`sub-rep-${b}`);
         if (btn) {
@@ -1041,6 +1045,17 @@
       } else {
         storeSelect.classList.add("hidden");
       }
+
+      // 기본 조회기간이 비어있고 날짜 직접지정이 없으면 현재 월(해당월)로 자동 세팅
+      const reportMonth = document.getElementById("report-month-select");
+      const startDate = document.getElementById("report-start-date").value;
+      const endDate = document.getElementById("report-end-date").value;
+      if (!reportMonth.value && !startDate && !endDate) {
+        const now = new Date();
+        const currentYM = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        reportMonth.value = currentYM;
+      }
+
       loadActiveReport();
     }
 
@@ -2601,7 +2616,7 @@
     // 종합 리포트 센터 (5종 정렬/분석 리포트 엔진)
     // ========================================================
     let currentReportData = null;
-    let currentReportType = "crop-analytics";
+    let currentReportType = "monthly-summary";
 
     function onReportTypeChange() {
       const type = document.getElementById("report-type-select").value;
