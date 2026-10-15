@@ -165,6 +165,48 @@ async def delete_order(order_key: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+class SettlementUpdateModel(BaseModel):
+    settlement_status: str = "settled" # "settled" or "unsettled"
+    settled_at: Optional[str] = None
+    payment_method: Optional[str] = "카드결제(현장)"
+    settlement_memo: Optional[str] = ""
+
+class BatchSettlementModel(BaseModel):
+    store_name: str
+    year_month: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    settlement_status: str = "settled"
+    settled_at: Optional[str] = None
+    payment_method: Optional[str] = "카드결제(현장)"
+    settlement_memo: Optional[str] = ""
+
+@app.patch("/api/orders/{order_key:path}/settle")
+async def update_order_settlement(order_key: str, payload: SettlementUpdateModel):
+    from urllib.parse import unquote
+    order_key = unquote(order_key)
+    try:
+        res = database.update_order_settlement(order_key, payload.dict())
+        return JSONResponse(content=res)
+    except ValueError as ve:
+        raise HTTPException(status_code=400, detail=str(ve))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/settlement/batch")
+async def batch_settle_orders(payload: BatchSettlementModel):
+    try:
+        res = database.batch_settle_orders(
+            store_name=payload.store_name,
+            year_month=payload.year_month,
+            start_date=payload.start_date,
+            end_date=payload.end_date,
+            data=payload.dict()
+        )
+        return JSONResponse(content=res)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/api/receipt/{order_key:path}")
 async def get_receipt(order_key: str):
     from urllib.parse import unquote

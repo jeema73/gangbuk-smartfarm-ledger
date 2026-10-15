@@ -237,6 +237,10 @@ def add_delivery_order(data: Dict[str, Any]) -> Dict[str, Any]:
         "items": cleaned_items,
         "total_qty": total_qty,
         "total_amount": total_amount,
+        "settlement_status": data.get("settlement_status", "unsettled"),
+        "settled_at": data.get("settled_at", ""),
+        "payment_method": data.get("payment_method", ""),
+        "settlement_memo": data.get("settlement_memo", ""),
         "created_at": datetime.now().isoformat(),
         "updated_at": datetime.now().isoformat()
     }
@@ -356,6 +360,117 @@ def delete_delivery_order(target_key: str) -> Dict[str, Any]:
 
     return {"success": True, "message": "주문 내역이 성공적으로 삭제되었습니다."}
 
+def update_order_settlement(target_key: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    """단일 주문의 정산(결제) 상태 변경"""
+    db = get_db()
+    orders_ref = db.collection("orders")
+    matched_docs = []
+
+    doc_direct = orders_ref.document(target_key).get()
+    if doc_direct.exists:
+        matched_docs.append(doc_direct)
+    else:
+        query = orders_ref.where("order_key", "==", target_key).stream()
+        matched_docs = list(query)
+        if not matched_docs:
+            parts = target_key.split("___")
+            if len(parts) == 2:
+                t_date, t_store = parts[0].strip(), parts[1].strip()
+                q2 = orders_ref.where("store_name", "==", t_store).where("order_date", "==", t_date).stream()
+                matched_docs = list(q2)
+                if not matched_docs:
+                    q3 = orders_ref.where("store_name", "==", t_store).where("delivery_date", "==", t_date).stream()
+                    matched_docs = list(q3)
+
+    if not matched_docs:
+        raise ValueError(f"정산 처리할 주문 내역('{target_key}')을 찾을 수 없습니다.")
+
+    target_doc = matched_docs[0]
+    status = data.get("settlement_status", "settled")  # "settled" or "unsettled"
+    settled_at = data.get("settled_at") or (datetime.now().strftime("%Y-%m-%d") if status == "settled" else "")
+    payment_method = data.get("payment_method", "카드결제(현장)")
+    settlement_memo = data.get("settlement_memo", "").strip()
+
+    update_payload = {
+        "settlement_status": status,
+        "settled_at": settled_at if status == "settled" else "",
+        "payment_method": payment_method if status == "settled" else "",
+        "settlement_memo": settlement_memo,
+        "settled_updated_at": datetime.now().isoformat()
+    }
+    orders_ref.document(target_doc.id).update(update_payload)
+
+    return {
+        "success": True,
+        "order_id": target_doc.id,
+        "settlement_status": status,
+        "settled_at": update_payload["settled_at"],
+        "payment_method": update_payload["payment_method"],
+        "message": "정산 상태가 성공적으로 업데이트되었습니다."
+    }
+
+def batch_settle_orders(store_name: str, year_month: Optional[str] = None, start_date: Optional[str] = None, end_date: Optional[str] = None, data: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """특정 매장의 특정 기간/월의 모든 미정산 주문을 일괄 결제완료(또는 미정산) 처리"""
+    db = get_db()
+    orders_ref = db.collection("orders")
+    docs = orders_ref.stream()
+
+    data = data or {}
+    status = data.get("settlement_status", "settled")
+    settled_at = data.get("settled_at") or datetime.now().strftime("%Y-%m-%d")
+    payment_method = data.get("payment_method", "카드결제(현장)")
+    settlement_memo = data.get("settlement_memo", "").strip()
+
+    target_docs = []
+    for d in docs:
+        obj = d.to_dict()
+        if obj.get("store_name") != store_name:
+            continue
+        eff_date = obj.get("delivery_date") or obj.get("order_date", "")
+        if year_month and year_month != "전체":
+            if not eff_date.startswith(year_month):
+                continue
+        if start_date and eff_date < start_date:
+            continue
+        if end_date and eff_date > end_date:
+            continue
+
+        target_docs.append(d)
+
+    if not target_docs:
+        return {"success": True, "count": 0, "message": "해당 조건의 주문 내역이 없습니다."}
+
+    batch = db.batch()
+    count = 0
+    total_amount = 0
+
+    for d in target_docs:
+        obj = d.to_dict()
+        total_amount += int(round(obj.get("total_amount", 0)))
+        update_payload = {
+            "settlement_status": status,
+            "settled_at": settled_at if status == "settled" else "",
+            "payment_method": payment_method if status == "settled" else "",
+            "settlement_memo": settlement_memo,
+            "settled_updated_at": datetime.now().isoformat()
+        }
+        batch.update(orders_ref.document(d.id), update_payload)
+        count += 1
+        if count % 400 == 0:
+            batch.commit()
+            batch = db.batch()
+
+    batch.commit()
+    msg = f"'{store_name}' {count}건의 주문({total_amount:,}원)이 {payment_method} 정산완료 처리되었습니다." if status == "settled" else f"'{store_name}' {count}건의 주문이 미정산으로 변경되었습니다."
+    return {
+        "success": True,
+        "count": count,
+        "total_amount": total_amount,
+        "settled_at": settled_at,
+        "payment_method": payment_method,
+        "message": msg
+    }
+
 def get_orders(search_date: Optional[str] = None, search_store: Optional[str] = None, year_month: Optional[str] = None, limit: int = 500) -> List[Dict[str, Any]]:
     """모든 통계와 정렬의 기본 기준은 delivery_date (납품일)"""
     try:
@@ -365,6 +480,14 @@ def get_orders(search_date: Optional[str] = None, search_store: Optional[str] = 
         orders = []
         for d in docs:
             obj = d.to_dict()
+            if not obj.get("settlement_status"):
+                obj["settlement_status"] = "unsettled"
+            if not obj.get("settled_at"):
+                obj["settled_at"] = ""
+            if not obj.get("payment_method"):
+                obj["payment_method"] = ""
+            if not obj.get("settlement_memo"):
+                obj["settlement_memo"] = ""
             orders.append(obj)
 
         filtered = []
@@ -440,5 +563,9 @@ def get_receipt_data(order_key: str) -> Dict[str, Any]:
         "total_amount": total_amt,
         "formatted_total_amount": f"{total_amt:,}",
         "korean_amount": korean_amt,
-        "supplier": supplier
+        "supplier": supplier,
+        "settlement_status": order.get("settlement_status", "unsettled"),
+        "settled_at": order.get("settled_at", ""),
+        "payment_method": order.get("payment_method", ""),
+        "settlement_memo": order.get("settlement_memo", "")
     }

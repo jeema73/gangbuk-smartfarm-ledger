@@ -51,13 +51,19 @@ def get_store_settlement_report(
             crop_stats[crop] = crop_stats.get(crop, 0.0) + qty
 
             filtered_items.append({
+                "order_id": ord_obj.get("id"),
+                "order_key": ord_obj.get("order_key"),
                 "order_date": o_date,
                 "delivery_date": d_date,
                 "crop": crop,
                 "unit_price": unit_price,
                 "qty": qty,
                 "amount": amt,
-                "remarks": item.get("remarks", "")
+                "remarks": item.get("remarks", ""),
+                "settlement_status": ord_obj.get("settlement_status", "unsettled"),
+                "settled_at": ord_obj.get("settled_at", ""),
+                "payment_method": ord_obj.get("payment_method", ""),
+                "settlement_memo": ord_obj.get("settlement_memo", "")
             })
 
     filtered_items.sort(key=lambda x: (x.get("delivery_date") or x.get("order_date"), x.get("crop")))
@@ -82,6 +88,18 @@ def get_store_settlement_report(
     else:
         period_label = "전체 기간"
 
+    # 정산 집계
+    settled_amount = sum(it["amount"] for it in filtered_items if it.get("settlement_status") == "settled")
+    unsettled_amount = total_amount - settled_amount
+    settled_count = len([it for it in filtered_items if it.get("settlement_status") == "settled"])
+    unsettled_count = len(filtered_items) - settled_count
+    
+    # 최근 결제일
+    settled_dates = [it.get("settled_at") for it in filtered_items if it.get("settled_at")]
+    latest_settled_at = max(settled_dates) if settled_dates else ""
+
+    is_all_settled = (len(filtered_items) > 0 and unsettled_count == 0)
+
     return {
         "store_name": store_name,
         "store_address": store_addr,
@@ -95,7 +113,15 @@ def get_store_settlement_report(
         "formatted_total_amount": f"{total_amount:,}",
         "korean_amount": korean_amount,
         "crop_summary": ", ".join([f"{c} {q:,.0f}g" for c, q in crop_stats.items()]),
-        "supplier": supplier
+        "supplier": supplier,
+        "settled_amount": settled_amount,
+        "formatted_settled_amount": f"{settled_amount:,}",
+        "unsettled_amount": unsettled_amount,
+        "formatted_unsettled_amount": f"{unsettled_amount:,}",
+        "settled_count": settled_count,
+        "unsettled_count": unsettled_count,
+        "is_all_settled": is_all_settled,
+        "latest_settled_at": latest_settled_at
     }
 
 def get_monthly_summary_report(
@@ -136,6 +162,8 @@ def get_monthly_summary_report(
 
         st = stores_data[s_name]
         st["order_count"] += 1
+        is_settled = (ord_obj.get("settlement_status") == "settled")
+        settled_dt = ord_obj.get("settled_at") or ""
 
         for item in ord_obj.get("items", []):
             crop = item.get("crop", "").strip()
@@ -145,6 +173,17 @@ def get_monthly_summary_report(
             st["item_count"] += 1
             st["total_qty"] += qty
             st["total_amount"] += amt
+            if is_settled:
+                st["settled_amount"] = st.get("settled_amount", 0) + amt
+                st["settled_orders"] = st.get("settled_orders", 0) + 1
+            else:
+                st["unsettled_amount"] = st.get("unsettled_amount", 0) + amt
+                st["unsettled_orders"] = st.get("unsettled_orders", 0) + 1
+
+            if settled_dt:
+                if not st.get("latest_settled_at") or settled_dt > st["latest_settled_at"]:
+                    st["latest_settled_at"] = settled_dt
+
             if crop:
                 st["crops_breakdown"][crop] = st["crops_breakdown"].get(crop, 0.0) + qty
 
@@ -152,11 +191,19 @@ def get_monthly_summary_report(
     grand_total_qty = 0.0
     grand_total_amount = 0
     grand_total_orders = 0
+    grand_settled_amount = 0
+    grand_unsettled_amount = 0
 
     for s_name, data in stores_data.items():
         grand_total_qty += data["total_qty"]
         grand_total_amount += data["total_amount"]
         grand_total_orders += data["order_count"]
+        
+        s_amt = data.get("settled_amount", 0)
+        u_amt = data["total_amount"] - s_amt
+        grand_settled_amount += s_amt
+        grand_unsettled_amount += u_amt
+
         crops_text = ", ".join([f"{c} {q:,.0f}g" for c, q in data["crops_breakdown"].items()])
         result_list.append({
             "store_name": s_name,
@@ -166,6 +213,11 @@ def get_monthly_summary_report(
             "formatted_total_qty": f"{data['total_qty']:,.1f}".rstrip('0').rstrip('.'),
             "total_amount": data["total_amount"],
             "formatted_total_amount": f"{data['total_amount']:,}",
+            "settled_amount": s_amt,
+            "formatted_settled_amount": f"{s_amt:,}",
+            "unsettled_amount": u_amt,
+            "formatted_unsettled_amount": f"{u_amt:,}",
+            "latest_settled_at": data.get("latest_settled_at", ""),
             "crops_summary": crops_text
         })
 
@@ -195,6 +247,10 @@ def get_monthly_summary_report(
         "formatted_grand_total_qty": f"{grand_total_qty:,.1f}".rstrip('0').rstrip('.'),
         "grand_total_amount": grand_total_amount,
         "formatted_grand_total_amount": f"{grand_total_amount:,}",
+        "grand_settled_amount": grand_settled_amount,
+        "formatted_grand_settled_amount": f"{grand_settled_amount:,}",
+        "grand_unsettled_amount": grand_unsettled_amount,
+        "formatted_grand_unsettled_amount": f"{grand_unsettled_amount:,}",
         "korean_amount": number_to_korean(grand_total_amount),
         "supplier": supplier
     }

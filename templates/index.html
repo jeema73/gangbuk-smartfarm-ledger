@@ -409,6 +409,7 @@
                 <th class="py-3 px-4 min-w-[200px]">포함된 품목 내역</th>
                 <th class="py-3 px-4 min-w-[95px] text-right whitespace-nowrap">총 수량</th>
                 <th class="py-3 px-4 min-w-[115px] text-right whitespace-nowrap">총 금액</th>
+                <th class="py-3 px-3 min-w-[110px] text-center whitespace-nowrap">정산·결제</th>
                 <th class="py-3 px-4 min-w-[185px] text-center whitespace-nowrap">관리 및 인쇄</th>
               </tr>
             </thead>
@@ -805,6 +806,74 @@
           <button type="button" onclick="closeEditOrderModal()" class="px-5 py-2.5 bg-[#ede4d4] hover:bg-[#dfd4c2] text-[#4d4235] font-bold rounded-2xl text-xs transition">취소</button>
           <button type="button" onclick="submitOrderEdit(event)" class="px-6 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white font-bold rounded-2xl text-xs transition shadow-sm active:scale-95">수정 저장하기</button>
         </div>
+      </div>
+    </div>
+
+    <!-- 납품 건별 정산·결제 관리 모달 -->
+    <div id="settlement-modal" class="fixed inset-0 bg-black/65 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 hidden no-print">
+      <div class="bg-[#fdfaf3] border border-[#e6decd] rounded-3xl max-w-md w-full shadow-2xl overflow-hidden relative">
+        <div class="p-4 bg-[#234935] text-white flex items-center justify-between shrink-0">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-credit-card text-emerald-300"></i>
+            <h3 class="font-bold text-sm sm:text-base font-['Gowun_Dodum',sans-serif]">납품 건별 정산·결제 관리</h3>
+          </div>
+          <button onclick="closeSettlementModal()" class="text-white/80 hover:text-white text-lg font-bold w-8 h-8 rounded-full hover:bg-black/20 transition flex items-center justify-center">✕</button>
+        </div>
+
+        <form onsubmit="submitSettlementModal(event)" class="p-5 space-y-4">
+          <div class="bg-[#f5efe3] border border-[#ded2bc] rounded-2xl p-3 text-xs space-y-1">
+            <div class="flex justify-between text-[#706454]">
+              <span>대상 내역:</span>
+              <span id="settle-modal-target" class="font-bold text-[#2a231b]">-</span>
+            </div>
+            <div class="flex justify-between items-center text-[#706454] pt-1 border-t border-[#e8ddca]">
+              <span>결제 대상 금액:</span>
+              <span id="settle-modal-amount" class="text-sm font-black text-[#2d5a43]">-</span>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-[#574c3e] mb-1.5">정산 상태 *</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border cursor-pointer transition select-none bg-white border-[#ded2bc] has-[:checked]:border-[#2d5a43] has-[:checked]:bg-[#edf7f1] has-[:checked]:text-[#1a5836] font-bold text-xs">
+                <input type="radio" name="settle_status_radio" value="settled" id="settle-radio-settled" checked onchange="onSettleStatusRadioChange()">
+                <span>✓ 결제완료</span>
+              </label>
+              <label class="flex items-center justify-center gap-2 p-2.5 rounded-xl border cursor-pointer transition select-none bg-white border-[#ded2bc] has-[:checked]:border-[#ea580c] has-[:checked]:bg-[#fff7ed] has-[:checked]:text-[#c2410c] font-bold text-xs">
+                <input type="radio" name="settle_status_radio" value="unsettled" id="settle-radio-unsettled" onchange="onSettleStatusRadioChange()">
+                <span>⏳ 미정산</span>
+              </label>
+            </div>
+          </div>
+
+          <div id="settle-detail-fields" class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">결제 수단</label>
+              <select id="settle-modal-method" class="w-full px-3 py-2.5 ghibli-input text-xs font-bold text-[#2d5a43]">
+                <option value="카드결제(현장)" selected>💳 카드결제(현장 단말기)</option>
+                <option value="계좌이체">🏦 계좌이체</option>
+                <option value="현금결제">💵 현금결제</option>
+                <option value="상계처리">🔄 상계처리</option>
+                <option value="기타">🏷️ 기타</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">결제(정산) 일자</label>
+              <input type="date" id="settle-modal-date" class="w-full px-3 py-2 ghibli-input text-xs font-medium">
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-[#574c3e] mb-1">메모 / 승인번호 (선택)</label>
+              <input type="text" id="settle-modal-memo" placeholder="예: 카드 승인번호, 비고 등" class="w-full px-3 py-2 ghibli-input text-xs">
+            </div>
+          </div>
+
+          <div class="pt-2 flex gap-2">
+            <button type="button" onclick="closeSettlementModal()" class="w-1/3 py-2.5 bg-[#f0e7d7] hover:bg-[#e4d9c6] text-[#4d4235] font-bold rounded-2xl text-xs transition">취소</button>
+            <button type="submit" class="w-2/3 py-2.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white font-bold rounded-2xl text-xs transition shadow-sm active:scale-95">설정 저장</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -1437,6 +1506,19 @@
             <td class="py-3 px-4 text-[#6e6353] text-xs">${itemsDesc}</td>
             <td class="py-3 px-4 text-right font-bold text-[#42382b]">${item.total_qty.toLocaleString()}g</td>
             <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${Math.round(item.total_amount).toLocaleString()}원</td>
+            <td class="py-3 px-3 text-center whitespace-nowrap">
+              ${item.settlement_status === 'settled' ? `
+                <button onclick="toggleOrderSettlement('${item.order_key}', 'settled', '${item.settled_at || ''}', '${item.payment_method || '카드결제(현장)'}', ${Math.round(item.total_amount)})" class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#e8f5ec] hover:bg-[#d5eedc] text-[#166534] border border-[#bbf0cb] rounded-lg text-[11px] font-bold shadow-2xs transition active:scale-95" title="클릭하여 결제정보 수정 또는 미정산 취소">
+                  <i class="fa-solid fa-circle-check text-emerald-600"></i>
+                  <span>${item.payment_method ? (item.payment_method.includes('카드') ? '카드완료' : item.payment_method) : '결제완료'}</span>
+                </button>
+              ` : `
+                <button onclick="toggleOrderSettlement('${item.order_key}', 'unsettled', '', '카드결제(현장)', ${Math.round(item.total_amount)})" class="inline-flex items-center gap-1 px-2.5 py-1 bg-[#fff5ea] hover:bg-[#ffe6cc] text-[#c25e1a] border border-[#fed7aa] rounded-lg text-[11px] font-bold shadow-2xs transition active:scale-95" title="클릭하여 카드결제(정산완료) 처리">
+                  <i class="fa-solid fa-clock text-[#ea580c]"></i>
+                  <span>미정산</span>
+                </button>
+              `}
+            </td>
             <td class="py-3 px-4 text-center whitespace-nowrap">
               <div class="flex items-center justify-center gap-1.5">
                 <button onclick="openReceiptModal('${item.order_key}')" class="px-2.5 py-1.5 bg-[#fbf7ee] hover:bg-[#efe6d6] border border-[#ded2bc] text-[#3d3326] rounded-xl text-xs font-bold shadow-xs transition active:scale-95" title="확인서 인쇄">
@@ -2162,9 +2244,14 @@
                 <div style="font-size: 9px; color: #666; white-space: nowrap;">4.19로 로컬푸드 활성화 사업</div>
               </div>
             </div>
-            <div style="text-align: center;">
+            <div style="text-align: center; position: relative;">
               <h1 style="font-size: 22px; font-weight: 900; letter-spacing: 4px; margin: 0; white-space: nowrap;">스마트팜 납품 정산서</h1>
               <div style="font-size: 11px; color: #555; margin-top: 2px; white-space: nowrap;">( 업 체 별  결 재 내 역 서 )</div>
+              ${data.is_all_settled ? `
+                <div style="position: absolute; right: -75px; top: -5px; border: 2.5px solid #16a34a; color: #16a34a; font-size: 11px; font-weight: 900; padding: 3px 8px; border-radius: 6px; transform: rotate(10deg); background: rgba(240, 253, 244, 0.9); letter-spacing: 1px;">
+                  ✓ 결제완료<br><span style="font-size: 9px; font-weight: normal;">${data.latest_settled_at || '카드결제'}</span>
+                </div>
+              ` : ''}
             </div>
             <div style="text-align: right; font-size: 10px; color: #444; white-space: nowrap;">
               <div>정산대상: <b>${data.period_label || data.year_month || '전체 기간'}</b></div>
@@ -2394,23 +2481,27 @@
             </table>
           </div>
 
-          <!-- 월간 핵심 지표 요약 -->
+          <!-- 월간 핵심 지표 요약 (수금/미수금 포함) -->
           <div style="display: flex; gap: 8px; margin-bottom: 12px; text-align: center;">
             <div style="flex: 1; border: 1px solid #333; padding: 6px; background: #fafafa;">
               <div style="font-size: 10px; color: #666; white-space: nowrap;">협력 매장수</div>
-              <div style="font-size: 14px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.store_count} 개소</div>
-            </div>
-            <div style="flex: 1; border: 1px solid #333; padding: 6px; background: #fafafa;">
-              <div style="font-size: 10px; color: #666; white-space: nowrap;">총 납품 건수</div>
-              <div style="font-size: 14px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.grand_total_orders} 건</div>
+              <div style="font-size: 13px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.store_count} 개소</div>
             </div>
             <div style="flex: 1; border: 1px solid #333; padding: 6px; background: #fafafa;">
               <div style="font-size: 10px; color: #666; white-space: nowrap;">총 공급 중량</div>
-              <div style="font-size: 14px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.formatted_grand_total_qty} g</div>
+              <div style="font-size: 13px; font-weight: bold; margin-top: 2px; white-space: nowrap;">${data.formatted_grand_total_qty} g</div>
             </div>
-            <div style="flex: 1.5; border: 1px solid #333; padding: 6px; background: #f0fdf4;">
-              <div style="font-size: 10px; color: #166534; white-space: nowrap;">총 공급 가액 (합계)</div>
-              <div style="font-size: 15px; font-weight: 900; color: #047857; margin-top: 2px; white-space: nowrap;">₩ ${data.formatted_grand_total_amount}</div>
+            <div style="flex: 1.2; border: 1px solid #333; padding: 6px; background: #fafafa;">
+              <div style="font-size: 10px; color: #444; white-space: nowrap;">총 공급 가액</div>
+              <div style="font-size: 14px; font-weight: 900; color: #222; margin-top: 2px; white-space: nowrap;">₩ ${data.formatted_grand_total_amount}</div>
+            </div>
+            <div style="flex: 1.2; border: 1px solid #333; padding: 6px; background: #f0fdf4;">
+              <div style="font-size: 10px; color: #166534; white-space: nowrap;">수금 완료액 (카드등)</div>
+              <div style="font-size: 14px; font-weight: 900; color: #16a34a; margin-top: 2px; white-space: nowrap;">₩ ${data.formatted_grand_settled_amount || '0'}</div>
+            </div>
+            <div style="flex: 1.2; border: 1px solid #333; padding: 6px; background: #fff5f5;">
+              <div style="font-size: 10px; color: #991b1b; white-space: nowrap;">미수금 총액</div>
+              <div style="font-size: 14px; font-weight: 900; color: #dc2626; margin-top: 2px; white-space: nowrap;">₩ ${data.formatted_grand_unsettled_amount || '0'}</div>
             </div>
           </div>
 
@@ -2720,7 +2811,41 @@
         wrapper.innerHTML = '<div class="p-8 text-center text-[#887a66]">해당 매장의 납품 내역이 없습니다.</div>';
         return;
       }
+
+      const isAllSettled = data.is_all_settled;
+      const settledAmt = data.settled_amount || 0;
+      const unsettledAmt = data.unsettled_amount || 0;
+
       wrapper.innerHTML = `
+        <!-- 매장 정산 마감 액션 바 -->
+        <div class="p-3.5 bg-gradient-to-r from-[#fbf8f1] to-[#f4eee1] border-b border-[#e6dcce] flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-[#443828] flex items-center gap-1.5">
+              <i class="fa-solid fa-credit-card text-[#2d5a43]"></i> 정산 수납 현황:
+            </span>
+            <div class="flex items-center gap-2 text-xs">
+              <span class="px-2 py-0.5 rounded-full font-bold bg-[#e8f5ec] text-[#166534] border border-[#c3edd0]">
+                수금완료: ${data.formatted_settled_amount}원 (${data.settled_count}건)
+              </span>
+              <span class="px-2 py-0.5 rounded-full font-bold ${unsettledAmt > 0 ? 'bg-[#fff0e6] text-[#c25e1a] border border-[#fed7aa]' : 'bg-[#f4efe6] text-[#786c5e]'}">
+                미수금: ${data.formatted_unsettled_amount}원 (${data.unsettled_count}건)
+              </span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2">
+            ${isAllSettled ? `
+              <button onclick="batchSettleCurrentStore('unsettled')" class="px-3 py-1.5 bg-white hover:bg-[#faefe9] border border-[#f3c8b8] text-[#c24124] rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs active:scale-95">
+                <i class="fa-solid fa-rotate-left"></i> 정산완료 취소(미정산으로 변경)
+              </button>
+            ` : `
+              <button onclick="batchSettleCurrentStore('settled')" class="px-3.5 py-1.5 bg-gradient-to-r from-[#2d5a43] to-[#3a7556] hover:from-[#234935] text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs active:scale-95">
+                <i class="fa-solid fa-credit-card text-emerald-300"></i> ${data.period_label || '해당 기간'} 전체 카드결제 완료 처리
+              </button>
+            `}
+          </div>
+        </div>
+
         <table class="w-full text-left border-collapse text-xs min-w-[700px]">
           <thead>
             <tr class="bg-[#f4eee1] text-[#42382b] font-bold uppercase tracking-wider border-b border-[#e5dccb]">
@@ -2731,6 +2856,7 @@
               <th class="py-3 px-4 text-right">수량(g)</th>
               <th class="py-3 px-4 text-right">금액(원)</th>
               <th class="py-3 px-4 text-center">납품일자</th>
+              <th class="py-3 px-3 text-center">정산·결제</th>
               <th class="py-3 px-4">비고</th>
             </tr>
           </thead>
@@ -2744,6 +2870,17 @@
                 <td class="py-3 px-4 text-right font-bold text-[#42382b]">${Number(it.qty).toLocaleString()}g</td>
                 <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${Number(it.amount).toLocaleString()}원</td>
                 <td class="py-3 px-4 text-center text-[#7a6f5d]">${it.delivery_date || it.order_date}</td>
+                <td class="py-3 px-3 text-center whitespace-nowrap">
+                  ${it.settlement_status === 'settled' ? `
+                    <button onclick="toggleOrderSettlement('${it.order_key}', 'settled', '${it.settled_at || ''}', '${it.payment_method || '카드결제(현장)'}', ${Number(it.amount)})" class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#e8f5ec] hover:bg-[#d5eedc] text-[#166534] border border-[#bbf0cb] rounded text-[10px] font-bold transition">
+                      <i class="fa-solid fa-check"></i> ${it.payment_method ? (it.payment_method.includes('카드') ? '카드완료' : it.payment_method) : '완료'}
+                    </button>
+                  ` : `
+                    <button onclick="toggleOrderSettlement('${it.order_key}', 'unsettled', '', '카드결제(현장)', ${Number(it.amount)})" class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#fff5ea] hover:bg-[#ffe6cc] text-[#c25e1a] border border-[#fed7aa] rounded text-[10px] font-bold transition">
+                      <i class="fa-solid fa-clock"></i> 미정산
+                    </button>
+                  `}
+                </td>
                 <td class="py-3 px-4 text-[#7a6f5d]">${it.remarks || '-'}</td>
               </tr>
             `).join('')}
@@ -2765,10 +2902,13 @@
             <tr class="bg-[#f4eee1] text-[#42382b] font-bold uppercase tracking-wider border-b border-[#e5dccb]">
               <th class="py-3 px-3 text-center">No</th>
               <th class="py-3 px-4">협력 매장명</th>
-              <th class="py-3 px-4 text-center">납품 횟수</th>
+              <th class="py-3 px-3 text-center">납품횟수</th>
               <th class="py-3 px-4 text-right">총 공급량(g)</th>
               <th class="py-3 px-4 text-right">총 공급가액(원)</th>
-              <th class="py-3 px-4">주요 납품 작물</th>
+              <th class="py-3 px-4 text-right">수금완료(원)</th>
+              <th class="py-3 px-4 text-right">미수금(원)</th>
+              <th class="py-3 px-3 text-center">최종결제일</th>
+              <th class="py-3 px-4">주요 작물</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-[#eee5d5]">
@@ -2776,10 +2916,13 @@
               <tr class="hover:bg-[#fbf7ee] transition">
                 <td class="py-3 px-3 text-center text-[#9c8e7c] font-bold">${idx + 1}</td>
                 <td class="py-3 px-4 font-bold text-[#26211a]">${s.store_name}</td>
-                <td class="py-3 px-4 text-center font-semibold text-[#42382b]">${s.order_count}회</td>
+                <td class="py-3 px-3 text-center font-semibold text-[#42382b]">${s.order_count}회</td>
                 <td class="py-3 px-4 text-right font-bold text-[#42382b]">${s.formatted_total_qty}g</td>
-                <td class="py-3 px-4 text-right font-black text-[#2d5a43]">${s.formatted_total_amount}원</td>
-                <td class="py-3 px-4 text-[#6e6353] text-[11px]">${s.crops_summary || '-'}</td>
+                <td class="py-3 px-4 text-right font-black text-[#26211a]">${s.formatted_total_amount}원</td>
+                <td class="py-3 px-4 text-right font-bold text-[#166534]">${s.formatted_settled_amount || '0'}원</td>
+                <td class="py-3 px-4 text-right font-bold ${s.unsettled_amount > 0 ? 'text-[#c24124]' : 'text-[#7a6f5d]'}">${s.formatted_unsettled_amount || '0'}원</td>
+                <td class="py-3 px-3 text-center text-[#554b3d] text-[11px] whitespace-nowrap">${s.latest_settled_at || '-'}</td>
+                <td class="py-3 px-4 text-[#6e6353] text-[11px] truncate max-w-xs">${s.crops_summary || '-'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -2895,9 +3038,14 @@
                 <div style="font-size: 10px; color: #333; margin-top: 4px; white-space: nowrap;">발행일자: <b>${data.order_date}</b></div>
               </div>
             </div>
-            <div style="font-size: 22px; font-weight: 900; letter-spacing: 5px; text-align: center; white-space: nowrap;">
+            <div style="font-size: 22px; font-weight: 900; letter-spacing: 5px; text-align: center; white-space: nowrap; position: relative;">
               납 품 확 인 서
               <div style="font-size: 11px; font-weight: normal; letter-spacing: 1px; color: #444; margin-top: 2px; white-space: nowrap;">( 거 래 명 세 표 )</div>
+              ${data.settlement_status === 'settled' ? `
+                <div style="position: absolute; right: -70px; top: -2px; border: 2px solid #16a34a; color: #16a34a; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 4px; transform: rotate(10deg); background: rgba(240, 253, 244, 0.95);">
+                  결제완료<br><span style="font-size: 8px;">${data.settled_at || '카드'}</span>
+                </div>
+              ` : ''}
             </div>
             <div style="text-align: right; font-size: 10px; color: #444; white-space: nowrap;">
               관리번호: ${data.order_key ? data.order_key.replace('___', '-') : ''}
@@ -3118,6 +3266,184 @@
         document.execCommand("copy");
         alert("주소가 복사되었습니다: " + input.value);
       });
+    }
+
+    // ========================================================
+    // 정산 / 결제 상태 관리 제어 함수
+    // ========================================================
+    let currentSettleOrderKey = "";
+
+    function toggleOrderSettlement(orderKey, currentStatus, settledAt, paymentMethod, amount) {
+      currentSettleOrderKey = orderKey;
+      const today = new Date().toISOString().split('T')[0];
+      
+      const modal = document.getElementById("settlement-modal");
+      const targetLabel = document.getElementById("settle-modal-target");
+      const amountLabel = document.getElementById("settle-modal-amount");
+      const dateInput = document.getElementById("settle-modal-date");
+      const methodSelect = document.getElementById("settle-modal-method");
+      const memoInput = document.getElementById("settle-modal-memo");
+      const radioSettled = document.getElementById("settle-radio-settled");
+      const radioUnsettled = document.getElementById("settle-radio-unsettled");
+
+      targetLabel.textContent = `납품 건 #${orderKey}`;
+      amountLabel.textContent = `${Number(amount || 0).toLocaleString()}원`;
+
+      if (currentStatus === 'settled') {
+        radioSettled.checked = true;
+        dateInput.value = settledAt || today;
+        methodSelect.value = paymentMethod || "카드결제(현장)";
+        memoInput.value = "";
+      } else {
+        // 미정산 상태에서 클릭 시 즉시 카드결제 처리를 편하게 하도록 기본값 '결제완료' & '카드결제(현장)' 세팅
+        radioSettled.checked = true;
+        dateInput.value = today;
+        methodSelect.value = "카드결제(현장)";
+        memoInput.value = "";
+      }
+
+      onSettleStatusRadioChange();
+      modal.classList.remove("hidden");
+    }
+
+    function onSettleStatusRadioChange() {
+      const isSettled = document.getElementById("settle-radio-settled").checked;
+      const detailFields = document.getElementById("settle-detail-fields");
+      if (isSettled) {
+        detailFields.classList.remove("opacity-40", "pointer-events-none");
+      } else {
+        detailFields.classList.add("opacity-40", "pointer-events-none");
+      }
+    }
+
+    function closeSettlementModal() {
+      document.getElementById("settlement-modal").classList.add("hidden");
+    }
+
+    async function submitSettlementModal(e) {
+      e.preventDefault();
+      if (!currentSettleOrderKey) return;
+
+      const isSettled = document.getElementById("settle-radio-settled").checked;
+      const settlement_status = isSettled ? "settled" : "unsettled";
+      const settled_at = isSettled ? (document.getElementById("settle-modal-date").value || new Date().toISOString().split('T')[0]) : "";
+      const payment_method = isSettled ? document.getElementById("settle-modal-method").value : "";
+      const settlement_memo = isSettled ? document.getElementById("settle-modal-memo").value.trim() : "";
+
+      try {
+        const res = await fetch(`/api/orders/${encodeURIComponent(currentSettleOrderKey)}/settle`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            settlement_status,
+            settled_at,
+            payment_method,
+            settlement_memo
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          alert(data.detail || "정산 상태 변경 실패");
+          return;
+        }
+
+        closeSettlementModal();
+
+        // 현재 열려있는 화면 목록 실시간 새로고침
+        const viewHistory = document.getElementById("view-history");
+        if (viewHistory && !viewHistory.classList.contains("hidden")) {
+          loadOrdersHistory();
+        }
+        const viewReports = document.getElementById("view-reports");
+        if (viewReports && !viewReports.classList.contains("hidden")) {
+          loadActiveReport();
+        }
+
+      } catch (err) {
+        alert("통신 오류가 발생했습니다: " + err.message);
+      }
+    }
+
+    // 매장별 일괄 정산/카드결제 처리 함수
+    async function batchSettleCurrentStore(targetStatus = 'settled') {
+      const storeName = document.getElementById("report-store-select") ? document.getElementById("report-store-select").value : "";
+      if (!storeName) {
+        alert("선택된 협력 매장이 없습니다.");
+        return;
+      }
+
+      const monthVal = document.getElementById("report-month-select") ? document.getElementById("report-month-select").value : "";
+      const startDate = document.getElementById("report-start-date") ? document.getElementById("report-start-date").value : "";
+      const endDate = document.getElementById("report-end-date") ? document.getElementById("report-end-date").value : "";
+      const periodLabel = (startDate && endDate) ? `${startDate} ~ ${endDate}` : (monthVal ? `${monthVal}월` : "전체 기간");
+      const today = new Date().toISOString().split('T')[0];
+
+      if (targetStatus === 'settled') {
+        const ok = confirm(`[매장 일괄 카드결제 처리]\n매장명: ${storeName}\n대상기간: ${periodLabel}\n\n위 기간의 모든 납품 내역을 '카드결제(현장) 완료'로 일괄 등록하시겠습니까?`);
+        if (!ok) return;
+
+        try {
+          const res = await fetch("/api/settlement/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              store_name: storeName,
+              year_month: monthVal,
+              start_date: startDate,
+              end_date: endDate,
+              settlement_status: "settled",
+              settled_at: today,
+              payment_method: "카드결제(현장)",
+              settlement_memo: "현장 단말기 일괄 결제"
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            alert(data.detail || "일괄 처리 실패");
+            return;
+          }
+
+          alert(`🎉 ${data.message}`);
+          loadActiveReport();
+          loadOrdersHistory();
+        } catch (err) {
+          alert("서버 통신 오류: " + err.message);
+        }
+      } else {
+        const ok = confirm(`[일괄 정산 취소]\n매장명: ${storeName}\n대상기간: ${periodLabel}\n\n해당 기간의 모든 납품 내역을 다시 '미정산' 상태로 되돌리시겠습니까?`);
+        if (!ok) return;
+
+        try {
+          const res = await fetch("/api/settlement/batch", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              store_name: storeName,
+              year_month: monthVal,
+              start_date: startDate,
+              end_date: endDate,
+              settlement_status: "unsettled",
+              settled_at: "",
+              payment_method: "",
+              settlement_memo: ""
+            })
+          });
+
+          const data = await res.json();
+          if (!res.ok) {
+            alert(data.detail || "정산 취소 실패");
+            return;
+          }
+
+          alert(`완료: ${data.message}`);
+          loadActiveReport();
+          loadOrdersHistory();
+        } catch (err) {
+          alert("서버 통신 오류: " + err.message);
+        }
+      }
     }
   </script>
 </body>
