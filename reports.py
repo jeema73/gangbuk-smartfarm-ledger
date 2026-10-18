@@ -374,7 +374,8 @@ def get_store_ranking_report(
 
 def get_daily_dispatch_report(
     start_date: Optional[str] = None,
-    end_date: Optional[str] = None
+    end_date: Optional[str] = None,
+    year_month: Optional[str] = None
 ) -> Dict[str, Any]:
     """5. 일자별 출고 대장 (시간순/일자별 묶음 배송 내역)"""
     orders = database.get_orders(limit=5000)
@@ -391,6 +392,9 @@ def get_daily_dispatch_report(
             continue
         if end_date and eff_date > end_date:
             continue
+        if not start_date and not end_date and year_month and year_month != "전체":
+            if not eff_date.startswith(year_month):
+                continue
 
         if eff_date not in daily_groups:
             daily_groups[eff_date] = {
@@ -427,7 +431,16 @@ def get_daily_dispatch_report(
         day["formatted_total_qty"] = f"{day['total_qty']:,.1f}".rstrip('0').rstrip('.')
         day["formatted_total_amount"] = f"{day['total_amount']:,}"
 
-    period_label = f"{start_date} ~ {end_date}" if start_date and end_date else "전체 기간"
+    if start_date and end_date:
+        period_label = f"{start_date} ~ {end_date}" if start_date != end_date else start_date
+    elif start_date:
+        period_label = f"{start_date} 이후"
+    elif end_date:
+        period_label = f"{end_date} 이전"
+    elif year_month and year_month != "전체":
+        period_label = f"{year_month.replace('-', '년 ')}월"
+    else:
+        period_label = "전체 기간"
 
     return {
         "period_label": period_label,

@@ -257,9 +257,9 @@ async def report_store_ranking(start_date: Optional[str] = None, end_date: Optio
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/reports/daily-dispatch")
-async def report_daily_dispatch(start_date: Optional[str] = None, end_date: Optional[str] = None):
+async def report_daily_dispatch(start_date: Optional[str] = None, end_date: Optional[str] = None, year_month: Optional[str] = None):
     try:
-        res = reports.get_daily_dispatch_report(start_date=start_date, end_date=end_date)
+        res = reports.get_daily_dispatch_report(start_date=start_date, end_date=end_date, year_month=year_month)
         return JSONResponse(content=res)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

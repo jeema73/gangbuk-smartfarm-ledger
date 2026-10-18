@@ -2653,9 +2653,18 @@
       try {
         let endpoint = "";
         let params = [];
-        if (startDate) params.push(`start_date=${startDate}`);
-        if (endDate) params.push(`end_date=${endDate}`);
-        else if (monthVal) params.push(`year_month=${encodeURIComponent(monthVal)}`);
+        if (startDate && endDate) {
+          params.push(`start_date=${startDate}`);
+          params.push(`end_date=${endDate}`);
+        } else if (startDate && !endDate) {
+          params.push(`start_date=${startDate}`);
+          params.push(`end_date=${startDate}`);
+        } else if (!startDate && endDate) {
+          params.push(`start_date=${endDate}`);
+          params.push(`end_date=${endDate}`);
+        } else if (monthVal) {
+          params.push(`year_month=${encodeURIComponent(monthVal)}`);
+        }
 
         if (type === "crop-analytics") {
           endpoint = `/api/reports/crop-analytics?${params.join('&')}`;
