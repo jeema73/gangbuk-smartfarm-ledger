@@ -7,3 +7,6 @@ backups/*.xlsx
 !backups/.gitkeep
 firebase_key.json
 google_key.json
+
+# 설정 파일(시트 주소, Webhook 등) - git에 올리지 않음
+config.json

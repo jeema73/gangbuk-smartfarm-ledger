@@ -1,0 +1,16 @@
+{
+  "supplier": {
+    "name": "",
+    "department": "",
+    "biz_no": "",
+    "address": "",
+    "manager": "",
+    "tel": ""
+  },
+  "google_sheet": {
+    "sheet_url": "",
+    "sheet_id": "",
+    "webhook_url": ""
+  },
+  "crops": []
+}
